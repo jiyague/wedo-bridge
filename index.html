@@ -4,39 +4,42 @@
     <meta charset="UTF-8">
     <title>Bridge Bluetooth Lego WeDo</title>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #f0f0f0; }
-        button { padding: 20px 40px; font-size: 20px; background-color: #007bff; color: white; border: none; border-radius: 10px; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
-        #status { margin-top: 20px; font-weight: bold; }
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #f0f0f0; margin: 0; }
+        button { padding: 25px 50px; font-size: 22px; background-color: #28a745; color: white; border: none; border-radius: 15px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        button:hover { background-color: #218838; }
+        #status { margin-top: 20px; font-weight: bold; color: #333; max-width: 80%; text-align: center; }
     </style>
 </head>
 <body>
-    <h1>Lego WeDo Bridge</h1>
-    <button id="connectBtn">Conectar Smarthub</button>
-    <p id="status">Estado: Esperando conexión...</p>
+    <h1>Lego WeDo Force Bridge</h1>
+    <button id="connectBtn">BUSCAR TODOS LOS DISPOSITIVOS</button>
+    <p id="status">Estado: Pulsa para escanear</p>
 
     <script>
         document.getElementById('connectBtn').addEventListener('click', async () => {
             const status = document.getElementById('status');
             try {
-                status.innerText = "Buscando dispositivo...";
-                // Buscamos dispositivos LPF2 (el protocolo oficial de WeDo)
+                status.innerText = "Abriendo selector... Si no ves el Lego, asegúrate de que la luz parpadea.";
+                
+                // CAMBIO CLAVE: Quitamos filtros. Aceptamos cualquier dispositivo 
+                // pero pedimos acceso al servicio de Lego por si acaso.
                 const device = await navigator.bluetooth.requestDevice({
-                    filters: [{ namePrefix: 'LPF2' }, { namePrefix: 'WeDo' }],
+                    acceptAllDevices: true,
                     optionalServices: ['00001523-1212-efde-1523-785feabcd123']
                 });
                 
-                status.innerText = "Conectando a " + device.name + "...";
+                status.innerText = "Intentando vincular con: " + (device.name || "Dispositivo desconocido");
                 const server = await device.gatt.connect();
-                status.innerText = "¡Conectado! Ya puedes ir a Scratch.";
+                status.innerText = "¡VÍNCULO EXITOSO! Ahora ve a Scratch.";
                 
-                // Mantenemos la conexión abierta 5 segundos antes de cerrar el puente
+                // Mantenemos la atención del sistema 10 segundos
                 setTimeout(() => {
                     server.disconnect();
-                    status.innerText = "Conexión registrada. Abre Scratch ahora.";
-                }, 5000);
+                    status.innerText = "Listo. El sistema ya conoce al Lego. Abre Scratch.";
+                }, 10000);
             } catch (error) {
                 status.innerText = "Error: " + error;
+                console.error(error);
             }
         });
     </script>
