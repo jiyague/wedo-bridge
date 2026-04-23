@@ -2,54 +2,114 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>WeDo Web Control v1.6</title>
+    <title>Bridge Bluetooth Lego WeDo</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; background: #f0f0f0; }
-        .btn { padding: 20px; margin: 10px; font-size: 18px; cursor: pointer; border-radius: 10px; border: none; }
-        #log { margin-top: 20px; font-size: 14px; background: #fff; padding: 15px; border: 1px solid #ccc; height: 150px; overflow-y: auto; text-align: left; }
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background-color: #f0f0f0; margin: 0; gap: 15px; }
+        button { padding: 20px 40px; font-size: 20px; color: white; border: none; border-radius: 15px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        button:disabled { background-color: #aaa; cursor: not-allowed; }
+        #connectBtn { background-color: #28a745; }
+        #connectBtn:hover:not(:disabled) { background-color: #218838; }
+        .motor-controls { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; }
+        .motor-controls button { background-color: #007bff; }
+        .motor-controls button:hover:not(:disabled) { background-color: #0056b3; }
+        #stopBtn { background-color: #dc3545; }
+        #stopBtn:hover:not(:disabled) { background-color: #b02a37; }
+        #status { font-weight: bold; color: #333; max-width: 80%; text-align: center; }
     </style>
 </head>
 <body>
-    <h1>WeDo Web Control v1.6</h1>
-    <button id="connectBtn" class="btn" style="background:#007bff; color:white;">1. CONECTAR</button>
-    <div id="controls" style="display:none;">
-        <button id="motorCW" class="btn" style="background:#ffc107;">2. GIRAR MOTOR</button>
+    <h1>Lego WeDo 2.0 — Control Motor</h1>
+
+    <button id="connectBtn">🔵 CONECTAR</button>
+
+    <div class="motor-controls">
+        <button id="motorAFwdBtn" disabled>▶ Motor A — Adelante</button>
+        <button id="motorARevBtn" disabled>◀ Motor A — Atrás</button>
+        <button id="motorBFwdBtn" disabled>▶ Motor B — Adelante</button>
+        <button id="motorBRevBtn" disabled>◀ Motor B — Atrás</button>
+        <button id="stopBtn" disabled>⏹ PARAR TODO</button>
     </div>
-    <div id="log">Esperando...</div>
+
+    <p id="status">Estado: Pulsa para escanear</p>
 
     <script>
-        let motorChar;
-        const SERVICE_UUID = '00001523-1212-efde-1523-785feabcd123';
+        // UUIDs del protocolo WeDo 2.0
+        const SERVICE_UUID       = '00001523-1212-efde-1523-785feabcd123';
+        const CMD_CHARACTERISTIC = '00001565-1212-efde-1523-785feabcd123';
+
+        // Puertos: 0x00 = Puerto A, 0x01 = Puerto B
+        const PORT_A = 0x00;
+        const PORT_B = 0x01;
+
+        let motorCharacteristic = null;
+
+        const status = document.getElementById('status');
+        const controlBtns = ['motorAFwdBtn', 'motorARevBtn', 'motorBFwdBtn', 'motorBRevBtn', 'stopBtn'];
+
+        function setControlsEnabled(enabled) {
+            controlBtns.forEach(id => document.getElementById(id).disabled = !enabled);
+        }
+
+        // Construye y envía un comando de motor
+        // speed: -100 a 100 (negativo = sentido inverso), 0 = parar
+        async function sendMotorCommand(port, speed) {
+            if (!motorCharacteristic) return;
+            // Convertimos velocidad negativa a byte sin signo (complemento a 2)
+            const speedByte = speed < 0 ? (256 + speed) : speed;
+            const cmd = new Uint8Array([0x05, 0x01, port, 0x01, speedByte]);
+            try {
+                await motorCharacteristic.writeValueWithResponse(cmd);
+                status.innerText = `Comando enviado → Puerto ${port === PORT_A ? 'A' : 'B'}, velocidad ${speed}`;
+            } catch (e) {
+                status.innerText = 'Error al enviar comando: ' + e;
+            }
+        }
+
+        async function stopAll() {
+            // Manda 0 a ambos puertos
+            if (!motorCharacteristic) return;
+            await motorCharacteristic.writeValueWithResponse(new Uint8Array([0x05, 0x01, PORT_A, 0x01, 0x00]));
+            await motorCharacteristic.writeValueWithResponse(new Uint8Array([0x05, 0x01, PORT_B, 0x01, 0x00]));
+            status.innerText = 'Motores parados.';
+        }
 
         document.getElementById('connectBtn').addEventListener('click', async () => {
             try {
+                status.innerText = 'Buscando dispositivo...';
+
                 const device = await navigator.bluetooth.requestDevice({
                     acceptAllDevices: true,
                     optionalServices: [SERVICE_UUID]
                 });
+
+                status.innerText = 'Conectando a ' + (device.name || 'Dispositivo') + '...';
+
                 const server = await device.gatt.connect();
                 const service = await server.getPrimaryService(SERVICE_UUID);
-                const chars = await service.getCharacteristics();
-                
-                motorChar = chars.find(c => c.properties.write || c.properties.writeWithoutResponse);
-                
-                // --- LA SECUENCIA MÁGICA DE INICIALIZACIÓN ---
-                // 1. Decirle al Hub: "El puerto 1 tiene un motor"
-                await motorChar.writeValue(new Uint8Array([0x06, 0x00, 0x01, 0x01, 0x02, 0x01]));
-                // 2. Establecer el modo de salida en modo potencia
-                await motorChar.writeValue(new Uint8Array([0x06, 0x00, 0x01, 0x01, 0x02, 0x02]));
-                
-                document.getElementById('controls').style.display = 'block';
-                document.getElementById('log').innerText = "Hub inicializado correctamente.";
-            } catch (e) { document.getElementById('log').innerText = "Error: " + e; }
+
+                // ← ESTO ES LO QUE FALTABA: obtener la característica de comandos
+                motorCharacteristic = await service.getCharacteristic(CMD_CHARACTERISTIC);
+
+                status.innerText = '✅ CONECTADO: ' + (device.name || 'WeDo Hub') + ' — Listo para controlar motores';
+                setControlsEnabled(true);
+
+                device.addEventListener('gattserverdisconnected', () => {
+                    status.innerText = '❌ Conexión perdida. Vuelve a conectar.';
+                    motorCharacteristic = null;
+                    setControlsEnabled(false);
+                });
+
+            } catch (error) {
+                status.innerText = 'Error: ' + error;
+                console.error(error);
+            }
         });
 
-        document.getElementById('motorCW').onclick = async () => {
-            // Comando de motor LWP: [Longitud, HubId, Tipo, Puerto, Subcomando, Potencia]
-            // Puerto 1, Potencia 50 (0x32)
-            await motorChar.writeValue(new Uint8Array([0x06, 0x00, 0x01, 0x01, 0x01, 0x32]));
-            document.getElementById('log').innerText = "Comando de potencia enviado.";
-        };
+        document.getElementById('motorAFwdBtn').addEventListener('click', () => sendMotorCommand(PORT_A,  75));
+        document.getElementById('motorARevBtn').addEventListener('click', () => sendMotorCommand(PORT_A, -75));
+        document.getElementById('motorBFwdBtn').addEventListener('click', () => sendMotorCommand(PORT_B,  75));
+        document.getElementById('motorBRevBtn').addEventListener('click', () => sendMotorCommand(PORT_B, -75));
+        document.getElementById('stopBtn').addEventListener('click',      () => stopAll());
     </script>
 </body>
 </html>
