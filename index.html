@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>WeDo Web Control v1.4</title>
+    <title>WeDo Web Control v1.5</title>
     <style>
         body { font-family: sans-serif; text-align: center; padding: 20px; background: #f0f0f0; }
         .btn { padding: 20px; margin: 10px; font-size: 18px; cursor: pointer; border-radius: 10px; border: none; }
@@ -10,50 +10,48 @@
     </style>
 </head>
 <body>
-    <h1>WeDo Web Control v1.4</h1>
-    <button id="connectBtn" class="btn" style="background:#007bff; color:white;">1. CONECTAR Y VALIDAR</button>
+    <h1>WeDo Web Control v1.5 (Pro)</h1>
+    <button id="connectBtn" class="btn" style="background:#007bff; color:white;">CONECTAR</button>
     <div id="controls" style="display:none;">
-        <button id="motorCW" class="btn" style="background:#ffc107;">2. GIRAR MOTOR</button>
+        <button id="motorCW" class="btn" style="background:#ffc107;">GIRAR MOTOR</button>
+        <button id="stopBtn" class="btn" style="background:#dc3545; color:white;">PARAR</button>
     </div>
-    <div id="log">Estado: Esperando...</div>
+    <div id="log">Esperando conexión...</div>
 
     <script>
         let motorChar;
         const SERVICE_UUID = '00001523-1212-efde-1523-785feabcd123';
 
         document.getElementById('connectBtn').addEventListener('click', async () => {
-            const logEl = document.getElementById('log');
             try {
                 const device = await navigator.bluetooth.requestDevice({
                     acceptAllDevices: true,
                     optionalServices: [SERVICE_UUID]
                 });
-                
                 const server = await device.gatt.connect();
                 const service = await server.getPrimaryService(SERVICE_UUID);
                 const chars = await service.getCharacteristics();
                 
                 motorChar = chars.find(c => c.properties.write || c.properties.writeWithoutResponse);
-                const notifyChar = chars.find(c => c.properties.notify);
-
-                // IMPORTANTE: Nos suscribimos a las notificaciones para que el Hub
-                // deje de bloquearnos y nos "acepte" como un cliente válido.
-                if (notifyChar) {
-                    await notifyChar.startNotifications();
-                    notifyChar.addEventListener('characteristicvaluechanged', (event) => {
-                        logEl.innerText = "Hub dice: ¡Hola! Conexión validada.";
-                    });
-                }
+                
+                // 1. Handshake inicial: Activar puertos
+                await motorChar.writeValue(new Uint8Array([0x06, 0x00, 0x01, 0x01, 0x02, 0x02]));
                 
                 document.getElementById('controls').style.display = 'block';
-                logEl.innerText = "¡Conectado y validado!";
-            } catch (e) { logEl.innerText = "Error: " + e; }
+                document.getElementById('log').innerText = "Hub inicializado. Listo.";
+            } catch (e) { document.getElementById('log').innerText = "Error: " + e; }
         });
 
         document.getElementById('motorCW').onclick = async () => {
-            // Este es el comando estándar de inicio de motor LWP
+            // Estructura de comando oficial LWP para motor
+            // [Longitud, HubId, Tipo, Puerto, Comando, Potencia]
             await motorChar.writeValue(new Uint8Array([0x06, 0x00, 0x01, 0x01, 0x01, 0x32]));
-            document.getElementById('log').innerText = "Comando enviado.";
+            document.getElementById('log').innerText = "Comando motor enviado.";
+        };
+
+        document.getElementById('stopBtn').onclick = async () => {
+            await motorChar.writeValue(new Uint8Array([0x06, 0x00, 0x01, 0x01, 0x01, 0x00]));
+            document.getElementById('log').innerText = "Comando stop enviado.";
         };
     </script>
 </body>
