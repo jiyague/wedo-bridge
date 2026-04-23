@@ -12,31 +12,35 @@
 </head>
 <body>
     <h1>Lego WeDo Force Bridge</h1>
-    <button id="connectBtn">BUSCAR TODOS LOS DISPOSITIVOS</button>
+    <button id="connectBtn">CONECTAR Y MANTENER VÍNCULO</button>
     <p id="status">Estado: Pulsa para escanear</p>
 
     <script>
         document.getElementById('connectBtn').addEventListener('click', async () => {
             const status = document.getElementById('status');
             try {
-                status.innerText = "Abriendo selector... Si no ves el Lego, asegúrate de que la luz parpadea.";
+                status.innerText = "Buscando dispositivo...";
                 
-                // CAMBIO CLAVE: Quitamos filtros. Aceptamos cualquier dispositivo 
-                // pero pedimos acceso al servicio de Lego por si acaso.
+                // Solicitamos acceso a cualquier dispositivo, pero especificando el servicio de Lego
                 const device = await navigator.bluetooth.requestDevice({
                     acceptAllDevices: true,
                     optionalServices: ['00001523-1212-efde-1523-785feabcd123']
                 });
                 
-                status.innerText = "Intentando vincular con: " + (device.name || "Dispositivo desconocido");
-                const server = await device.gatt.connect();
-                status.innerText = "¡VÍNCULO EXITOSO! Ahora ve a Scratch.";
+                status.innerText = "Conectando a " + (device.name || "Dispositivo") + "...";
                 
-                // Mantenemos la atención del sistema 10 segundos
-                setTimeout(() => {
-                    server.disconnect();
-                    status.innerText = "Listo. El sistema ya conoce al Lego. Abre Scratch.";
-                }, 10000);
+                const server = await device.gatt.connect();
+                
+                // Forzamos el acceso al servicio principal para "despertar" la comunicación
+                await server.getPrimaryService('00001523-1212-efde-1523-785feabcd123');
+                
+                status.innerText = "¡CONECTADO! MANTENIENDO VÍNCULO... (No cierres esta pestaña)";
+                
+                // Escuchamos por si el dispositivo se desconecta inesperadamente
+                device.addEventListener('gattserverdisconnected', () => {
+                    status.innerText = "Conexión perdida. Pulsa el botón del Lego y vuelve a conectar.";
+                });
+
             } catch (error) {
                 status.innerText = "Error: " + error;
                 console.error(error);
