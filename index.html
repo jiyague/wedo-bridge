@@ -1,28 +1,68 @@
-<script>
-    let motorChar;
-    const SERVICE_UUID = '00001523-1212-efde-1523-785feabcd123';
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>WeDo Web Control v1.2</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 20px; background: #f0f0f0; }
+        .btn { padding: 20px; margin: 10px; font-size: 18px; cursor: pointer; border-radius: 10px; border: none; }
+        #log { margin-top: 20px; font-size: 14px; background: #fff; padding: 15px; border: 1px solid #ccc; height: 150px; overflow-y: auto; text-align: left; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Control WeDo v1.2</h1>
+    <button id="connectBtn" class="btn" style="background:#007bff; color:white;">1. CONECTAR</button>
+    
+    <div id="controls" style="display:none;">
+        <button id="motorCW" class="btn" style="background:#ffc107;">2. GIRAR MOTOR</button>
+        <button id="stopBtn" class="btn" style="background:#dc3545; color:white;">3. PARAR</button>
+    </div>
+    
+    <div id="log">Estado: Pulsa conectar para empezar...</div>
 
-    // ... (Mantén tu código de conexión igual) ...
+    <script>
+        let motorChar;
+        const SERVICE_UUID = '00001523-1212-efde-1523-785feabcd123';
 
-    async function sendRaw(bytes) {
-        if (!motorChar) return;
-        try {
-            // El Smarthub necesita este formato: [Longitud, HubId, TipoMensaje, Puerto, Comando, Valor]
-            // Vamos a intentar un comando de salida directa LWP
-            await motorChar.writeValue(new Uint8Array(bytes));
-        } catch (e) { document.getElementById('log').innerText = "Error: " + e; }
-    }
+        document.getElementById('connectBtn').addEventListener('click', async () => {
+            const logEl = document.getElementById('log');
+            try {
+                logEl.innerText = "Buscando...";
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: [{ namePrefix: 'LPF2' }, { namePrefix: 'WeDo' }, { namePrefix: '13' }],
+                    optionalServices: [SERVICE_UUID]
+                });
+                
+                const server = await device.gatt.connect();
+                const service = await server.getPrimaryService(SERVICE_UUID);
+                const chars = await service.getCharacteristics();
+                motorChar = chars.find(c => c.properties.write || c.properties.writeWithoutResponse);
+                
+                document.getElementById('controls').style.display = 'block';
+                logEl.innerText = "Conectado. Ahora puedes girar el motor.";
+            } catch (e) { 
+                logEl.innerText = "Error: " + e; 
+            }
+        });
 
-    document.getElementById('motorCW').onclick = async () => {
-        // 1. Inicialización de puerto 1 para motor (Output mode)
-        await sendRaw([0x06, 0x00, 0x01, 0x01, 0x02, 0x02]);
-        // 2. Comando de encendido al 50%
-        await sendRaw([0x06, 0x00, 0x01, 0x01, 0x01, 0x32]);
-        document.getElementById('log').innerText = "Comando inicialización + motor enviado";
-    };
+        async function sendRaw(bytes) {
+            if (!motorChar) return;
+            try {
+                await motorChar.writeValue(new Uint8Array(bytes));
+            } catch (e) { document.getElementById('log').innerText = "Error al escribir: " + e; }
+        }
 
-    document.getElementById('stopBtn').onclick = async () => {
-        await sendRaw([0x06, 0x00, 0x01, 0x01, 0x01, 0x00]);
-        document.getElementById('log').innerText = "Motor detenido";
-    };
-</script>
+        document.getElementById('motorCW').onclick = async () => {
+            // Inicializar puerto 1 (comando 0x02) y luego poner potencia al 50% (0x32)
+            await sendRaw([0x06, 0x00, 0x01, 0x01, 0x02, 0x02]);
+            await sendRaw([0x06, 0x00, 0x01, 0x01, 0x01, 0x32]);
+            document.getElementById('log').innerText = "Comando enviado: Motor activo al 50%";
+        };
+
+        document.getElementById('stopBtn').onclick = async () => {
+            await sendRaw([0x06, 0x00, 0x01, 0x01, 0x01, 0x00]);
+            document.getElementById('log').innerText = "Comando enviado: Motor detenido";
+        };
+    </script>
+</body>
+</html>
