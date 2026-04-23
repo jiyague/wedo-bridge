@@ -2,101 +2,59 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WeDo Web Control v1.1 - Autodiscovery</title>
+    <title>WeDo Web Control v1.2</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; text-align: center; background-color: #f4f7f6; padding: 20px; }
-        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto; }
-        .btn { padding: 15px 25px; font-size: 16px; margin: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 80%; }
-        .btn-connect { background-color: #007bff; color: white; }
-        .btn-motor { background-color: #ffc107; }
-        .btn-stop { background-color: #dc3545; color: white; }
-        #log { margin-top: 20px; font-size: 12px; color: #444; height: 150px; overflow-y: auto; background: #eee; padding: 10px; text-align: left; border-radius: 5px; }
+        body { font-family: sans-serif; text-align: center; padding: 20px; background: #f0f0f0; }
+        .btn { padding: 20px; margin: 10px; font-size: 18px; cursor: pointer; border-radius: 10px; border: none; }
+        #log { margin-top: 20px; font-size: 12px; background: #fff; padding: 10px; border: 1px solid #ccc; height: 150px; overflow-y: auto; text-align: left; }
     </style>
 </head>
 <body>
-
-<div class="card">
-    <h1>WeDo Web Control v1.1</h1>
-    <button id="connectBtn" class="btn btn-connect">CONECTAR Y BUSCAR MOTOR</button>
-    
+    <h1>Control WeDo v1.2</h1>
+    <button id="connectBtn" class="btn" style="background:#007bff; color:white;">CONECTAR</button>
     <div id="controls" style="display:none;">
-        <hr>
-        <button id="motorCW" class="btn btn-motor">Girar Derecha ↻</button>
-        <button id="motorCCW" class="btn btn-motor">Girar Izquierda ↺</button>
-        <button id="stopBtn" class="btn btn-stop">PARAR MOTOR</button>
+        <button id="motorCW" class="btn" style="background:#ffc107;">GIRAR MOTOR</button>
+        <button id="stopBtn" class="btn" style="background:#dc3545; color:white;">PARAR</button>
     </div>
-
     <div id="log">Estado: Esperando...</div>
-</div>
 
-<script>
-    let device, server, motorChar;
-    // UUIDs estándar de LEGO WeDo 2.0
-    const SERVICE_UUID = '00001523-1212-efde-1523-785feabcd123';
+    <script>
+        let motorChar;
+        const SERVICE_UUID = '00001523-1212-efde-1523-785feabcd123';
 
-    const log = (msg) => {
-        const d = new Date();
-        const line = `[${d.toLocaleTimeString()}] ${msg}`;
-        document.getElementById('log').innerHTML = line + "<br>" + document.getElementById('log').innerHTML;
-        console.log(line);
-    };
-
-    document.getElementById('connectBtn').addEventListener('click', async () => {
-        try {
-            log("Iniciando búsqueda...");
-            device = await navigator.bluetooth.requestDevice({
-                filters: [{ namePrefix: 'LPF2' }, { namePrefix: 'WeDo' }, { namePrefix: '13' }],
-                optionalServices: [SERVICE_UUID]
-            });
-            
-            log("Conectando al servidor GATT...");
-            server = await device.gatt.connect();
-            
-            log("Explorando servicio primario...");
-            const service = await server.getPrimaryService(SERVICE_UUID);
-            
-            log("Buscando todas las características disponibles...");
-            const characteristics = await service.getCharacteristics();
-            
-            // Buscamos la característica que permite ESCRITURA (Write)
-            motorChar = characteristics.find(c => c.properties.write || c.properties.writeWithoutResponse);
-
-            if (motorChar) {
-                log("¡Éxito! Canal encontrado: " + motorChar.uuid);
+        document.getElementById('connectBtn').addEventListener('click', async () => {
+            try {
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: [{ namePrefix: 'LPF2' }, { namePrefix: 'WeDo' }, { namePrefix: '13' }],
+                    optionalServices: [SERVICE_UUID]
+                });
+                const server = await device.gatt.connect();
+                const service = await server.getPrimaryService(SERVICE_UUID);
+                const chars = await service.getCharacteristics();
+                motorChar = chars.find(c => c.properties.write || c.properties.writeWithoutResponse);
+                
                 document.getElementById('controls').style.display = 'block';
-                document.getElementById('connectBtn').style.backgroundColor = '#28a745';
-                document.getElementById('connectBtn').innerText = "CONECTADO";
-            } else {
-                log("Error: No se encontró canal de escritura.");
-            }
-            
-        } catch (e) {
-            log("ERROR: " + e);
+                document.getElementById('log').innerText = "Conectado. Pulsa 'GIRAR MOTOR'";
+            } catch (e) { document.getElementById('log').innerText = "Error: " + e; }
+        });
+
+        async function sendRaw(bytes) {
+            if (!motorChar) return;
+            // Enviamos el comando de escritura
+            await motorChar.writeValue(new Uint8Array(bytes));
         }
-    });
 
-    async function sendCommand(payload) {
-        if (!motorChar) return;
-        try {
-            // El protocolo WeDo 2.0 para motor directo suele ser: 
-            // [Puerto, TipoComando, Valor]
-            // Intentamos puerto 1 (0x01) y puerto 2 (0x02) por si acaso
-            const data1 = new Uint8Array([0x01, 0x01, payload]);
-            const data2 = new Uint8Array([0x02, 0x01, payload]);
-            
-            await motorChar.writeValue(data1);
-            await motorChar.writeValue(data2); 
-            log("Comando enviado: " + payload);
-        } catch (e) {
-            log("Error al enviar: " + e);
-        }
-    }
+        document.getElementById('motorCW').onclick = async () => {
+            // Estructura de paquete para activar motor en puerto 1 con potencia 50
+            // [0x01, 0x01, 0x32] -> Puerto 1, Comando 1, Potencia 50
+            await sendRaw([0x01, 0x01, 0x32]);
+            document.getElementById('log').innerText = "Comando enviado: Motor ON (Puerto 1)";
+        };
 
-    document.getElementById('motorCW').onclick = () => sendCommand(50);
-    document.getElementById('motorCCW').onclick = () => sendCommand(200); // 200 es reversa en WeDo
-    document.getElementById('stopBtn').onclick = () => sendCommand(0);
-
-</script>
+        document.getElementById('stopBtn').onclick = async () => {
+            await sendRaw([0x01, 0x01, 0x00]);
+            document.getElementById('log').innerText = "Comando enviado: Motor OFF";
+        };
+    </script>
 </body>
 </html>
