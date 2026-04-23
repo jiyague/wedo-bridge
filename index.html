@@ -2,23 +2,20 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>WeDo Web Control v1.3</title>
+    <title>WeDo Web Control v1.4</title>
     <style>
         body { font-family: sans-serif; text-align: center; padding: 20px; background: #f0f0f0; }
         .btn { padding: 20px; margin: 10px; font-size: 18px; cursor: pointer; border-radius: 10px; border: none; }
-        #log { margin-top: 20px; font-size: 14px; background: #fff; padding: 15px; border: 1px solid #ccc; height: 150px; overflow-y: auto; text-align: left; border-radius: 5px; }
+        #log { margin-top: 20px; font-size: 14px; background: #fff; padding: 15px; border: 1px solid #ccc; height: 150px; overflow-y: auto; text-align: left; }
     </style>
 </head>
 <body>
-    <h1>Control WeDo v1.3</h1>
-    <button id="connectBtn" class="btn" style="background:#007bff; color:white;">1. CONECTAR HUB</button>
-    
+    <h1>WeDo Web Control v1.4</h1>
+    <button id="connectBtn" class="btn" style="background:#007bff; color:white;">1. CONECTAR Y VALIDAR</button>
     <div id="controls" style="display:none;">
         <button id="motorCW" class="btn" style="background:#ffc107;">2. GIRAR MOTOR</button>
-        <button id="stopBtn" class="btn" style="background:#dc3545; color:white;">3. PARAR</button>
     </div>
-    
-    <div id="log">Estado: Pulsa conectar para buscar el Hub...</div>
+    <div id="log">Estado: Esperando...</div>
 
     <script>
         let motorChar;
@@ -27,44 +24,36 @@
         document.getElementById('connectBtn').addEventListener('click', async () => {
             const logEl = document.getElementById('log');
             try {
-                logEl.innerText = "Buscando...";
-                // Volvemos al filtro que sabemos que sí detecta el Hub
                 const device = await navigator.bluetooth.requestDevice({
                     acceptAllDevices: true,
                     optionalServices: [SERVICE_UUID]
                 });
                 
-                logEl.innerText = "Conectando al Hub...";
                 const server = await device.gatt.connect();
                 const service = await server.getPrimaryService(SERVICE_UUID);
                 const chars = await service.getCharacteristics();
                 
-                // Buscamos cualquier característica que permita escritura
                 motorChar = chars.find(c => c.properties.write || c.properties.writeWithoutResponse);
+                const notifyChar = chars.find(c => c.properties.notify);
+
+                // IMPORTANTE: Nos suscribimos a las notificaciones para que el Hub
+                // deje de bloquearnos y nos "acepte" como un cliente válido.
+                if (notifyChar) {
+                    await notifyChar.startNotifications();
+                    notifyChar.addEventListener('characteristicvaluechanged', (event) => {
+                        logEl.innerText = "Hub dice: ¡Hola! Conexión validada.";
+                    });
+                }
                 
                 document.getElementById('controls').style.display = 'block';
-                logEl.innerText = "¡Conectado! Pulsa 'GIRAR MOTOR'.";
-            } catch (e) { 
-                logEl.innerText = "Error: " + e; 
-            }
+                logEl.innerText = "¡Conectado y validado!";
+            } catch (e) { logEl.innerText = "Error: " + e; }
         });
 
-        async function sendRaw(bytes) {
-            if (!motorChar) return;
-            try {
-                await motorChar.writeValue(new Uint8Array(bytes));
-            } catch (e) { document.getElementById('log').innerText = "Error al escribir: " + e; }
-        }
-
         document.getElementById('motorCW').onclick = async () => {
-            // Comando directo para motor en puerto 1
-            await sendRaw([0x06, 0x00, 0x01, 0x01, 0x01, 0x32]);
-            document.getElementById('log').innerText = "Comando enviado: Motor activo";
-        };
-
-        document.getElementById('stopBtn').onclick = async () => {
-            await sendRaw([0x06, 0x00, 0x01, 0x01, 0x01, 0x00]);
-            document.getElementById('log').innerText = "Comando enviado: Motor detenido";
+            // Este es el comando estándar de inicio de motor LWP
+            await motorChar.writeValue(new Uint8Array([0x06, 0x00, 0x01, 0x01, 0x01, 0x32]));
+            document.getElementById('log').innerText = "Comando enviado.";
         };
     </script>
 </body>
