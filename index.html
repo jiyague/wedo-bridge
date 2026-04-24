@@ -20,7 +20,6 @@
       background: #1a1a2e; color: white;
     }
 
-    /* ── Barra Superior ── */
     #topbar {
       background: linear-gradient(135deg, #16213e, #0f3460);
       padding: 8px 14px;
@@ -45,19 +44,19 @@
 
     #connectBtn { background: #28a745; color: white; font-size: 15px; padding: 9px 20px; }
     #connectBtn.connected { background: #17a2b8; }
+    #renameBtn  { background: #5a4a8a; color: white; font-size: 13px; padding: 7px 13px; }
 
     .round-btn {
       width: 46px; height: 46px; border-radius: 50% !important;
       font-size: 20px; display: flex; align-items: center; justify-content: center;
       padding: 0 !important;
     }
-    #playBtn  { background: #4caf50; color: white; }
+    #playBtn { background: #4caf50; color: white; }
     #playBtn.running { background: #ff9800; }
-    #stopBtn  { background: #e53935; color: white; }
+    #stopBtn { background: #e53935; color: white; }
 
     .divider { width: 1px; height: 38px; background: #3a3a5a; flex-shrink: 0; }
 
-    /* Puertos auto-detectados */
     .port-status {
       display: flex; flex-direction: column; gap: 3px;
       background: rgba(255,255,255,0.07);
@@ -88,31 +87,18 @@
     #statusBar.err  { color: #e53935; }
     #statusBar.warn { color: #ff9800; }
 
-    /* ── Área principal ── */
     #main { flex: 1; display: flex; overflow: hidden; }
     #blocklyDiv { flex: 1; height: 100%; }
 
-    /* ── Contenedor lateral: botón + panel (flex row) ──
-       La clave del fix: botón y panel son hermanos en flex,
-       el botón siempre es visible y el panel se expande a su derecha. */
-    #sideContainer {
-      display: flex;
-      flex-direction: row;
-      flex-shrink: 0;
-    }
+    #sideContainer { display: flex; flex-direction: row; flex-shrink: 0; }
 
     #logToggleBtn {
       width: 20px;
-      background: #2a2a4a;
-      border: none;
+      background: #2a2a4a; border: none;
       border-left: 2px solid #3a3a5a;
-      cursor: pointer;
-      color: #8ab4d4;
-      font-size: 12px;
+      cursor: pointer; color: #8ab4d4; font-size: 12px;
       display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s;
-      flex-shrink: 0;
-      padding: 0;
+      transition: background 0.15s; flex-shrink: 0; padding: 0;
     }
     #logToggleBtn:hover { background: #3a3a6a; color: white; }
 
@@ -124,7 +110,6 @@
       overflow: hidden;
       transition: width 0.25s ease;
     }
-    /* Oculto por defecto */
     #logPanel.hidden { width: 0; border-left: none; }
 
     #logHeader {
@@ -140,12 +125,11 @@
     }
     #logContent {
       flex: 1; overflow-y: auto; padding: 6px;
-      font-family: monospace; font-size: 11px;
-      min-width: 210px;
+      font-family: monospace; font-size: 11px; min-width: 210px;
     }
     #logContent .e {
       padding: 2px 4px; border-radius: 3px;
-      margin-bottom: 2px; word-break: break-all; color: #6af;
+      margin-bottom: 2px; word-break: break-all;
     }
     #logContent .e.ok   { color: #4caf50; }
     #logContent .e.err  { color: #f66; }
@@ -155,16 +139,15 @@
 </head>
 <body>
 
-<!-- ── Barra superior ── -->
 <div id="topbar">
   <div class="logo">🧱 WeDo Blocks</div>
   <div class="author">by Jose I. Yagüe</div>
 
   <button class="btn" id="connectBtn" onclick="connectHub()">🔵 Conectar Hub</button>
+  <button class="btn" id="renameBtn"  onclick="renameHub()"  title="Cambia el nombre del hub (se guarda en su memoria)">✏️ Renombrar hub</button>
 
   <div class="divider"></div>
 
-  <!-- Puertos detectados automáticamente -->
   <div class="port-status">
     <div class="port-row">Puerto 1: <span class="port-val" id="port1Label">— vacío</span></div>
     <div class="port-row">Puerto 2: <span class="port-val" id="port2Label">— vacío</span></div>
@@ -183,18 +166,15 @@
 
   <div class="divider"></div>
 
-  <button class="btn round-btn" id="playBtn"  onclick="runProgram()"  title="Ejecutar">▶</button>
-  <button class="btn round-btn" id="stopBtn"  onclick="stopProgram()" title="Parar">⏹</button>
+  <button class="btn round-btn" id="playBtn" onclick="runProgram()"  title="Ejecutar">▶</button>
+  <button class="btn round-btn" id="stopBtn" onclick="stopProgram()" title="Parar">⏹</button>
 
   <div id="statusBar">Desconectado</div>
 </div>
 
-<!-- ── Zona de trabajo ── -->
 <div id="main">
   <div id="blocklyDiv"></div>
 
-  <!-- FIX toggle: botón y panel son hermanos en flex row,
-       el botón siempre visible, el panel se expande a su derecha -->
   <div id="sideContainer">
     <button id="logToggleBtn" onclick="toggleLog()" title="Mostrar registro">◀</button>
     <div id="logPanel" class="hidden">
@@ -207,7 +187,6 @@
   </div>
 </div>
 
-<!-- ── Toolbox ── -->
 <xml id="toolbox" style="display:none">
   <category name="🚩 Eventos" colour="#E6821E">
     <block type="wedo_when_flag"></block>
@@ -265,9 +244,8 @@
 'use strict';
 
 // ══════════════════════════════════════════════════════
-//  WeDo 2.0 — Protocolo BLE
+//  UUIDs del protocolo WeDo 2.0
 // ══════════════════════════════════════════════════════
-
 const UUID = {
   HUB_SERVICE:  '00001523-1212-efde-1523-785feabcd123',
   IO_SERVICE:   '00004f0e-1212-efde-1523-785feabcd123',
@@ -275,11 +253,12 @@ const UUID = {
   INPUT_CMD:    '00001563-1212-efde-1523-785feabcd123',
   SENSOR_VALUE: '00001560-1212-efde-1523-785feabcd123',
   PORT_TYPE:    '00001527-1212-efde-1523-785feabcd123',
+  HUB_NAME:     '00001524-1212-efde-1523-785feabcd123',  // ← renombrar hub
 };
 
-// Velocidades nivel 1–5: byte BLE para ↻ horario y ↺ antihorario
-const SPD_CW  = [0, 0x20, 0x35, 0x50, 0x65, 0x7e];
-const SPD_CCW = [0, 0xe0, 0xcb, 0xb0, 0x9b, 0x82];
+// Velocidades nivel 1–5 en byte BLE
+const SPD_CW  = [0, 0x20, 0x35, 0x50, 0x65, 0x7e]; // ↻ horario
+const SPD_CCW = [0, 0xe0, 0xcb, 0xb0, 0x9b, 0x82]; // ↺ antihorario
 
 const LED_COLORS = {
   apagado: 0, rosa: 1, violeta: 2, azul: 3,
@@ -290,14 +269,12 @@ let bleDevice   = null;
 let outputChar  = null;
 let inputChar   = null;
 let sensorChar  = null;
+let nameChar    = null;   // ← característica de nombre
 let isConnected = false;
 
-// Puerto detectado automáticamente para cada tipo de dispositivo
 const detectedPorts = { motor: null, tilt: null, motion: null };
-// canal → tipo ('motor' | 'tilt' | 'motion')
-const portCfg = {};
-
-const sensorData = { motion: 0, tilt: 0 };
+const portCfg       = {};
+const sensorData    = { motion: 0, tilt: 0 };
 
 // ── Conectar Hub ─────────────────────────────────────
 
@@ -314,25 +291,34 @@ async function connectHub() {
     const server = await dev.gatt.connect();
     log('✅ GATT conectado', 'ok');
 
-    // Servicio I/O (motor + sensores)
+    // Servicio I/O
     const ioSvc = await server.getPrimaryService(UUID.IO_SERVICE);
     outputChar  = await ioSvc.getCharacteristic(UUID.OUTPUT_CMD);
     inputChar   = await ioSvc.getCharacteristic(UUID.INPUT_CMD);
     sensorChar  = await ioSvc.getCharacteristic(UUID.SENSOR_VALUE);
-
     await sensorChar.startNotifications();
     sensorChar.addEventListener('characteristicvaluechanged', onSensorValue);
-    log('📡 Sensor value notifications activadas', 'ok');
+    log('📡 Sensor notifications activadas', 'ok');
 
-    // Servicio Hub (detección automática de puertos)
+    // Servicio Hub (detección de puertos + nombre)
     const hubSvc = await server.getPrimaryService(UUID.HUB_SERVICE);
+
     const ptChar = await hubSvc.getCharacteristic(UUID.PORT_TYPE);
     await ptChar.startNotifications();
     ptChar.addEventListener('characteristicvaluechanged', onPortType);
     log('🔌 Port type notifications activadas', 'ok');
-    log('⏳ Detectando dispositivos conectados...', 'info');
 
+    // Guardamos la característica de nombre
+    try {
+      nameChar = await hubSvc.getCharacteristic(UUID.HUB_NAME);
+      log('✏️ Característica de nombre disponible', 'ok');
+    } catch {
+      log('⚠️ Renombrar no disponible en este hub', 'info');
+    }
+
+    log('⏳ Detectando dispositivos conectados...', 'info');
     isConnected = true;
+
     const btn = document.getElementById('connectBtn');
     btn.textContent = '✅ ' + (dev.name || 'Hub conectado');
     btn.classList.add('connected');
@@ -347,7 +333,7 @@ async function connectHub() {
 
 function onDisconnect() {
   isConnected = false;
-  outputChar = inputChar = sensorChar = null;
+  outputChar = inputChar = sensorChar = nameChar = null;
   detectedPorts.motor = detectedPorts.tilt = detectedPorts.motion = null;
   for (const k of Object.keys(portCfg)) delete portCfg[k];
   updatePortDisplay();
@@ -358,18 +344,49 @@ function onDisconnect() {
   log('❌ Hub desconectado', 'err');
 }
 
+// ── Renombrar Hub ────────────────────────────────────
+
+async function renameHub() {
+  if (!nameChar) {
+    alert('Conecta el hub primero.');
+    return;
+  }
+  const nombre = prompt(
+    'Escribe el nuevo nombre del hub\n' +
+    '(máx. 14 caracteres, solo letras y números,\nsin tildes ni eñes):\n',
+    bleDevice?.name || ''
+  );
+  if (!nombre) return;
+
+  // Solo ASCII, máximo 14 caracteres
+  const clean = nombre.trim().replace(/[^\x00-\x7F]/g, '').substring(0, 14);
+  if (!clean) {
+    alert('Nombre no válido. Usa solo letras y números sin tildes ni eñes.');
+    return;
+  }
+
+  const bytes = new Uint8Array(clean.length);
+  for (let i = 0; i < clean.length; i++) bytes[i] = clean.charCodeAt(i);
+
+  try {
+    await nameChar.writeValueWithResponse(bytes);
+    log(`✏️ Hub renombrado a "${clean}"`, 'ok');
+    log('🔄 Apaga y enciende el hub para que el nuevo nombre aparezca en el picker de Bluetooth', 'info');
+    setStatus('Renombrado: ' + clean, 'ok');
+  } catch (e) {
+    log('❌ Error al renombrar: ' + e.message, 'err');
+  }
+}
+
 // ── Detección automática de puertos ─────────────────
-// El hub envía notificaciones PORT_TYPE al conectar con el estado
-// actual de cada puerto, y después al enchufar/desenchufar algo.
 
 async function onPortType(e) {
-  const d = new Uint8Array(e.target.value.buffer);
+  const d     = new Uint8Array(e.target.value.buffer);
   if (d.length < 2) return;
   const ch    = d[0];
   const added = d[1] === 1;
 
   if (!added) {
-    // Dispositivo desconectado de este puerto
     for (const key of Object.keys(detectedPorts)) {
       if (detectedPorts[key] === ch) detectedPorts[key] = null;
     }
@@ -386,21 +403,18 @@ async function onPortType(e) {
     detectedPorts.motor = ch;
     portCfg[ch] = 'motor';
     log(`🔌 Puerto ${ch}: ⚙️ Motor detectado`, 'ok');
-
   } else if (typeId === 0x22) {
     detectedPorts.tilt = ch;
     portCfg[ch] = 'tilt';
     log(`🔌 Puerto ${ch}: 📐 Sensor inclinación detectado`, 'ok');
     await configureSensor(ch, typeId);
-
   } else if (typeId === 0x23) {
     detectedPorts.motion = ch;
     portCfg[ch] = 'motion';
     log(`🔌 Puerto ${ch}: 📏 Sensor movimiento detectado`, 'ok');
     await configureSensor(ch, typeId);
-
   } else {
-    log(`🔌 Puerto ${ch}: dispositivo desconocido (tipo 0x${typeId.toString(16)})`, 'info');
+    log(`🔌 Puerto ${ch}: dispositivo tipo 0x${typeId.toString(16)}`, 'info');
   }
 
   updatePortDisplay();
@@ -427,13 +441,13 @@ async function configureSensor(ch, deviceType) {
   }
 }
 
-// ── Lectura de sensores ──────────────────────────────
+// ── Sensores ─────────────────────────────────────────
 
 function onSensorValue(e) {
-  const d   = new Uint8Array(e.target.value.buffer);
+  const d  = new Uint8Array(e.target.value.buffer);
   if (d.length < 6) return;
-  const ch  = d[1];
-  const dv  = new DataView(e.target.value.buffer);
+  const ch = d[1];
+  const dv = new DataView(e.target.value.buffer);
   const val = dv.getFloat32(2, true);
   const type = portCfg[ch];
 
@@ -447,10 +461,10 @@ function onSensorValue(e) {
   }
 }
 
-// ── Comandos de motor (sin puerto: auto-detectado) ───
+// ── Comandos motor ───────────────────────────────────
 
 async function motorOn(direction, speed) {
-  if (!outputChar)              { log('⚠️ Hub no conectado', 'err'); return; }
+  if (!outputChar)                  { log('⚠️ Hub no conectado', 'err'); return; }
   if (detectedPorts.motor === null) { log('⚠️ Motor no detectado. ¿Está conectado al hub?', 'err'); return; }
   speed = Math.max(1, Math.min(5, Math.round(speed)));
   const speedByte = direction === 'cw' ? SPD_CW[speed] : SPD_CCW[speed];
@@ -493,7 +507,6 @@ async function waitUntil(condFn, timeoutMs = 60000) {
 
 const JS = Blockly.JavaScript;
 
-// ── 🚩 Bandera verde ──────────────────────────────────
 Blockly.Blocks['wedo_when_flag'] = {
   init() {
     this.appendDummyInput().appendField('▶  Al pulsar PLAY');
@@ -504,7 +517,6 @@ Blockly.Blocks['wedo_when_flag'] = {
 };
 JS['wedo_when_flag'] = () => '';
 
-// ── ⚙️ Encender motor (se queda encendido) ───────────
 Blockly.Blocks['wedo_motor_on'] = {
   init() {
     this.appendDummyInput()
@@ -519,7 +531,7 @@ Blockly.Blocks['wedo_motor_on'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#4C97FF');
-    this.setTooltip('Enciende el motor y lo deja girando hasta que uses "apagar motor".');
+    this.setTooltip('Enciende el motor y lo deja girando hasta usar "apagar motor"');
   }
 };
 JS['wedo_motor_on'] = b => {
@@ -528,7 +540,6 @@ JS['wedo_motor_on'] = b => {
   return `await motorOn('${dir}', ${speed});\n`;
 };
 
-// ── ⏹ Apagar motor ───────────────────────────────────
 Blockly.Blocks['wedo_motor_off'] = {
   init() {
     this.appendDummyInput().appendField('⏹ apagar motor');
@@ -540,7 +551,6 @@ Blockly.Blocks['wedo_motor_off'] = {
 };
 JS['wedo_motor_off'] = () => `await motorOff();\n`;
 
-// ── ⚙️ Mover durante X segundos ──────────────────────
 Blockly.Blocks['wedo_motor_time'] = {
   init() {
     this.appendDummyInput()
@@ -566,15 +576,16 @@ JS['wedo_motor_time'] = b => {
   return `await motorOn('${dir}', ${speed});\nawait sleep(${time}*1000);\nawait motorOff();\n`;
 };
 
-// ── 💡 LED ────────────────────────────────────────────
 Blockly.Blocks['wedo_led'] = {
   init() {
     this.appendDummyInput()
       .appendField('💡 LED de color')
       .appendField(new Blockly.FieldDropdown([
-        ['🔵 azul','azul'],     ['🟢 verde','verde'],    ['🔴 rojo','rojo'],
-        ['🟡 amarillo','amarillo'], ['🟠 naranja','naranja'], ['🟣 violeta','violeta'],
-        ['🩷 rosa','rosa'],     ['🩵 cian','cian'],      ['⚪ blanco','blanco'], ['⚫ apagado','apagado'],
+        ['🔵 azul','azul'],         ['🟢 verde','verde'],
+        ['🔴 rojo','rojo'],         ['🟡 amarillo','amarillo'],
+        ['🟠 naranja','naranja'],   ['🟣 violeta','violeta'],
+        ['🩷 rosa','rosa'],         ['🩵 cian','cian'],
+        ['⚪ blanco','blanco'],     ['⚫ apagado','apagado'],
       ]), 'COLOR');
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
@@ -584,18 +595,16 @@ Blockly.Blocks['wedo_led'] = {
 };
 JS['wedo_led'] = b => `await setLed('${b.getFieldValue('COLOR')}');\n`;
 
-// ── 📏 Sensor movimiento (valor) ──────────────────────
 Blockly.Blocks['wedo_sensor_motion'] = {
   init() {
     this.appendDummyInput().appendField('📏 distancia');
     this.setOutput(true, 'Number');
     this.setColour('#5CB1D6');
-    this.setTooltip('Distancia medida por el sensor de movimiento');
+    this.setTooltip('Valor del sensor de movimiento');
   }
 };
 JS['wedo_sensor_motion'] = () => ['sensorData.motion', JS.ORDER_MEMBER];
 
-// ── 📐 Inclinación (valor numérico) ───────────────────
 Blockly.Blocks['wedo_sensor_tilt_val'] = {
   init() {
     this.appendDummyInput().appendField('📐 valor inclinación');
@@ -606,7 +615,6 @@ Blockly.Blocks['wedo_sensor_tilt_val'] = {
 };
 JS['wedo_sensor_tilt_val'] = () => ['sensorData.tilt', JS.ORDER_MEMBER];
 
-// ── 📐 Inclinación (booleano) ─────────────────────────
 Blockly.Blocks['wedo_sensor_tilt_bool'] = {
   init() {
     this.appendDummyInput()
@@ -631,7 +639,6 @@ JS['wedo_sensor_tilt_bool'] = b => {
   return [expr, JS.ORDER_EQUALITY];
 };
 
-// ── ⏱ Esperar N segundos ─────────────────────────────
 Blockly.Blocks['wedo_wait'] = {
   init() {
     this.appendValueInput('TIME').setCheck('Number').appendField('⏱ esperar');
@@ -648,7 +655,6 @@ JS['wedo_wait'] = b => {
   return `await sleep(${t}*1000);\n`;
 };
 
-// ── 🔢 Repetir N veces ────────────────────────────────
 Blockly.Blocks['wedo_repeat'] = {
   init() {
     this.appendValueInput('TIMES').setCheck('Number').appendField('🔢 repetir');
@@ -667,7 +673,6 @@ JS['wedo_repeat'] = b => {
   return `for (let _i=0; _i<${n} && isRunning; _i++) {\n${body}}\n`;
 };
 
-// ── 🔁 Por siempre ────────────────────────────────────
 Blockly.Blocks['wedo_forever'] = {
   init() {
     this.appendDummyInput().appendField('🔁 por siempre');
@@ -682,7 +687,6 @@ JS['wedo_forever'] = b => {
   return `while (isRunning) {\n${body}await sleep(20);\n}\n`;
 };
 
-// ── ⏳ Esperar hasta que ───────────────────────────────
 Blockly.Blocks['wedo_wait_until'] = {
   init() {
     this.appendValueInput('COND').setCheck('Boolean').appendField('⏳ esperar hasta que');
@@ -729,15 +733,10 @@ async function runProgram() {
   log('─────────────────────', 'info');
   log('🚀 Programa iniciado', 'ok');
 
-  // FIX: no llamamos motorOff() al terminar naturalmente.
-  // El motor queda en su último estado.
-  // Solo se para cuando el usuario pulsa ⏹ (stopProgram).
   const program = `(async () => {
-    try {
-      ${code}
-    } catch (e) {
-      if (isRunning) log('❌ Error en programa: ' + e.message, 'err');
-    } finally {
+    try { ${code} }
+    catch (e) { if (isRunning) log('❌ Error: ' + e.message, 'err'); }
+    finally {
       isRunning = false;
       document.getElementById('playBtn').classList.remove('running');
       document.getElementById('playBtn').textContent = '▶';
@@ -761,7 +760,6 @@ function stopProgram() {
   document.getElementById('playBtn').textContent = '▶';
   setStatus('Listo', 'ok');
   log('⏹ Parado por el usuario', 'info');
-  // Solo aquí paramos el motor (al pulsar el botón de stop)
   motorOff().catch(() => {});
 }
 
@@ -787,17 +785,12 @@ function log(msg, cls) {
 
 function clearLog() { document.getElementById('logContent').innerHTML = ''; }
 
-// FIX toggle: ahora funciona porque panel y botón son hermanos en flex row
 let logVisible = false;
-
 function toggleLog() {
   logVisible = !logVisible;
-  const panel = document.getElementById('logPanel');
-  const btn   = document.getElementById('logToggleBtn');
-  panel.classList.toggle('hidden', !logVisible);
-  btn.textContent = logVisible ? '▶' : '◀';
-  btn.title       = logVisible ? 'Ocultar registro' : 'Mostrar registro';
-  // Redimensionar Blockly después de que termine la transición CSS (250ms)
+  document.getElementById('logPanel').classList.toggle('hidden', !logVisible);
+  document.getElementById('logToggleBtn').textContent = logVisible ? '▶' : '◀';
+  document.getElementById('logToggleBtn').title = logVisible ? 'Ocultar registro' : 'Mostrar registro';
   setTimeout(() => Blockly.svgResize(workspace), 260);
 }
 
