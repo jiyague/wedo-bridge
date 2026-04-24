@@ -28,15 +28,10 @@
       border-bottom: 3px solid #4a90d9;
       flex-wrap: wrap; min-height: 60px;
     }
-    .logo {
-      font-size: 20px; font-weight: 900; color: #4a90d9;
-      white-space: nowrap; margin-right: 4px;
-    }
-    /* ← CAMBIO 2: nombre del autor */
+    .logo { font-size: 20px; font-weight: 900; color: #4a90d9; white-space: nowrap; }
     .author {
-      font-size: 11px; color: #6a8ab8;
-      white-space: nowrap; margin-left: -6px;
-      align-self: flex-end; padding-bottom: 2px;
+      font-size: 11px; color: #6a8ab8; white-space: nowrap;
+      align-self: flex-end; padding-bottom: 2px; margin-left: -4px;
     }
 
     .btn {
@@ -62,17 +57,14 @@
 
     .divider { width: 1px; height: 38px; background: #3a3a5a; flex-shrink: 0; }
 
-    .port-cfg {
-      display: flex; align-items: center; gap: 6px;
+    /* Puertos auto-detectados */
+    .port-status {
+      display: flex; flex-direction: column; gap: 3px;
       background: rgba(255,255,255,0.07);
-      padding: 5px 10px; border-radius: 10px; font-size: 13px;
+      padding: 5px 11px; border-radius: 10px; font-size: 12px;
     }
-    .port-cfg label { color: #aaa; }
-    .port-cfg select {
-      background: #2a2a4a; color: white;
-      border: 1px solid #4a4a6a;
-      border-radius: 6px; padding: 3px 7px; font-size: 13px; cursor: pointer;
-    }
+    .port-status .port-row { display: flex; align-items: center; gap: 5px; color: #aaa; }
+    .port-status .port-val { font-weight: bold; color: #7ecfff; }
 
     .sensor-pill {
       background: rgba(255,255,255,0.07);
@@ -97,43 +89,49 @@
     #statusBar.warn { color: #ff9800; }
 
     /* ── Área principal ── */
-    #main { flex: 1; display: flex; overflow: hidden; position: relative; }
+    #main { flex: 1; display: flex; overflow: hidden; }
     #blocklyDiv { flex: 1; height: 100%; }
 
-    /* ── CAMBIO 1: Panel de registro con toggle ── */
+    /* ── Contenedor lateral: botón + panel (flex row) ──
+       La clave del fix: botón y panel son hermanos en flex,
+       el botón siempre es visible y el panel se expande a su derecha. */
+    #sideContainer {
+      display: flex;
+      flex-direction: row;
+      flex-shrink: 0;
+    }
+
+    #logToggleBtn {
+      width: 20px;
+      background: #2a2a4a;
+      border: none;
+      border-left: 2px solid #3a3a5a;
+      cursor: pointer;
+      color: #8ab4d4;
+      font-size: 12px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+      flex-shrink: 0;
+      padding: 0;
+    }
+    #logToggleBtn:hover { background: #3a3a6a; color: white; }
+
     #logPanel {
-      width: 210px; min-width: 210px;
+      width: 210px;
       background: #0d0d1a;
       border-left: 2px solid #2a2a4a;
       display: flex; flex-direction: column;
       overflow: hidden;
-      transition: width 0.25s ease, min-width 0.25s ease, opacity 0.25s ease;
+      transition: width 0.25s ease;
     }
-    #logPanel.hidden {
-      width: 0; min-width: 0; opacity: 0; border-left: none;
-    }
-
-    /* Botón de toggle pegado al borde izquierdo del panel */
-    #logToggleBtn {
-      position: absolute;
-      right: 0; top: 50%;
-      transform: translateY(-50%);
-      z-index: 10;
-      width: 18px; height: 56px;
-      background: #2a2a4a;
-      border: none; border-radius: 8px 0 0 8px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      color: #aaa; font-size: 12px;
-      transition: right 0.25s ease, background 0.15s;
-    }
-    #logToggleBtn:hover { background: #3a3a6a; color: white; }
+    /* Oculto por defecto */
+    #logPanel.hidden { width: 0; border-left: none; }
 
     #logHeader {
       padding: 7px 10px; background: #12122a;
       border-bottom: 1px solid #2a2a4a;
       display: flex; justify-content: space-between; align-items: center;
-      white-space: nowrap;
+      white-space: nowrap; min-width: 210px;
     }
     #logHeader span { font-size: 12px; color: #888; text-transform: uppercase; font-weight: bold; }
     #clearLogBtn {
@@ -143,6 +141,7 @@
     #logContent {
       flex: 1; overflow-y: auto; padding: 6px;
       font-family: monospace; font-size: 11px;
+      min-width: 210px;
     }
     #logContent .e {
       padding: 2px 4px; border-radius: 3px;
@@ -159,29 +158,16 @@
 <!-- ── Barra superior ── -->
 <div id="topbar">
   <div class="logo">🧱 WeDo Blocks</div>
-  <!-- CAMBIO 2: nombre del autor -->
   <div class="author">by Jose I. Yagüe</div>
 
   <button class="btn" id="connectBtn" onclick="connectHub()">🔵 Conectar Hub</button>
 
   <div class="divider"></div>
 
-  <div class="port-cfg">
-    <label>Puerto 1:</label>
-    <select id="p1" onchange="updatePorts()">
-      <option value="motor">⚙️ Motor</option>
-      <option value="motion">📏 Movimiento</option>
-      <option value="tilt">📐 Inclinación</option>
-    </select>
-  </div>
-
-  <div class="port-cfg">
-    <label>Puerto 2:</label>
-    <select id="p2" onchange="updatePorts()">
-      <option value="motor">⚙️ Motor</option>
-      <option value="motion">📏 Movimiento</option>
-      <option value="tilt">📐 Inclinación</option>
-    </select>
+  <!-- Puertos detectados automáticamente -->
+  <div class="port-status">
+    <div class="port-row">Puerto 1: <span class="port-val" id="port1Label">— vacío</span></div>
+    <div class="port-row">Puerto 2: <span class="port-val" id="port2Label">— vacío</span></div>
   </div>
 
   <div class="divider"></div>
@@ -197,8 +183,8 @@
 
   <div class="divider"></div>
 
-  <button class="btn round-btn" id="playBtn" onclick="runProgram()" title="Ejecutar">▶</button>
-  <button class="btn round-btn" id="stopBtn" onclick="stopProgram()" title="Parar">⏹</button>
+  <button class="btn round-btn" id="playBtn"  onclick="runProgram()"  title="Ejecutar">▶</button>
+  <button class="btn round-btn" id="stopBtn"  onclick="stopProgram()" title="Parar">⏹</button>
 
   <div id="statusBar">Desconectado</div>
 </div>
@@ -207,19 +193,21 @@
 <div id="main">
   <div id="blocklyDiv"></div>
 
-  <!-- CAMBIO 1: botón toggle del registro -->
-  <button id="logToggleBtn" onclick="toggleLog()" title="Mostrar/ocultar registro">◀</button>
-
-  <div id="logPanel" class="hidden">
-    <div id="logHeader">
-      <span>📋 Registro</span>
-      <button id="clearLogBtn" onclick="clearLog()">Borrar</button>
+  <!-- FIX toggle: botón y panel son hermanos en flex row,
+       el botón siempre visible, el panel se expande a su derecha -->
+  <div id="sideContainer">
+    <button id="logToggleBtn" onclick="toggleLog()" title="Mostrar registro">◀</button>
+    <div id="logPanel" class="hidden">
+      <div id="logHeader">
+        <span>📋 Registro</span>
+        <button id="clearLogBtn" onclick="clearLog()">Borrar</button>
+      </div>
+      <div id="logContent"></div>
     </div>
-    <div id="logContent"></div>
   </div>
 </div>
 
-<!-- ── Toolbox de Blockly ── -->
+<!-- ── Toolbox ── -->
 <xml id="toolbox" style="display:none">
   <category name="🚩 Eventos" colour="#E6821E">
     <block type="wedo_when_flag"></block>
@@ -227,9 +215,6 @@
   <sep></sep>
   <category name="⚙️ Motor" colour="#4C97FF">
     <block type="wedo_motor_on">
-      <value name="SPEED"><block type="math_number"><field name="NUM">3</field></block></value>
-    </block>
-    <block type="wedo_motor_reverse">
       <value name="SPEED"><block type="math_number"><field name="NUM">3</field></block></value>
     </block>
     <block type="wedo_motor_off"></block>
@@ -292,38 +277,35 @@ const UUID = {
   PORT_TYPE:    '00001527-1212-efde-1523-785feabcd123',
 };
 
-const DEVICE = { MOTOR: 0x01, TILT: 0x22, MOTION: 0x23 };
+// Velocidades nivel 1–5: byte BLE para ↻ horario y ↺ antihorario
+const SPD_CW  = [0, 0x20, 0x35, 0x50, 0x65, 0x7e];
+const SPD_CCW = [0, 0xe0, 0xcb, 0xb0, 0x9b, 0x82];
 
-const LED = {
+const LED_COLORS = {
   apagado: 0, rosa: 1, violeta: 2, azul: 3,
   cian: 4, verde: 5, amarillo: 6, naranja: 7, rojo: 8, blanco: 9
 };
 
-const SPD_F = [0, 0x20, 0x35, 0x50, 0x65, 0x7e];
-const SPD_R = [0, 0xe0, 0xcb, 0xb0, 0x9b, 0x82];
-
-let bleDevice  = null;
-let outputChar = null;
-let inputChar  = null;
-let sensorChar = null;
+let bleDevice   = null;
+let outputChar  = null;
+let inputChar   = null;
+let sensorChar  = null;
 let isConnected = false;
 
-let portCfg = { 1: 'motor', 2: 'motor' };
+// Puerto detectado automáticamente para cada tipo de dispositivo
+const detectedPorts = { motor: null, tilt: null, motion: null };
+// canal → tipo ('motor' | 'tilt' | 'motion')
+const portCfg = {};
+
 const sensorData = { motion: 0, tilt: 0 };
 
-// ── Conectar Hub ────────────────────────────────────
+// ── Conectar Hub ─────────────────────────────────────
 
 async function connectHub() {
   try {
     setStatus('Buscando hub...', '');
-
-    // CAMBIO 3: filtramos por el UUID del servicio WeDo.
-    // Así el diálogo solo muestra hubs WeDo con su nombre real
-    // en lugar de "Dispositivo desconocido".
     const dev = await navigator.bluetooth.requestDevice({
-      filters: [
-        { services: [UUID.HUB_SERVICE] }
-      ],
+      filters: [{ services: [UUID.HUB_SERVICE] }],
       optionalServices: [UUID.IO_SERVICE]
     });
 
@@ -332,6 +314,7 @@ async function connectHub() {
     const server = await dev.gatt.connect();
     log('✅ GATT conectado', 'ok');
 
+    // Servicio I/O (motor + sensores)
     const ioSvc = await server.getPrimaryService(UUID.IO_SERVICE);
     outputChar  = await ioSvc.getCharacteristic(UUID.OUTPUT_CMD);
     inputChar   = await ioSvc.getCharacteristic(UUID.INPUT_CMD);
@@ -339,25 +322,21 @@ async function connectHub() {
 
     await sensorChar.startNotifications();
     sensorChar.addEventListener('characteristicvaluechanged', onSensorValue);
-    log('📡 Sensores activados', 'ok');
+    log('📡 Sensor value notifications activadas', 'ok');
 
-    try {
-      const hubSvc = await server.getPrimaryService(UUID.HUB_SERVICE);
-      const ptChar = await hubSvc.getCharacteristic(UUID.PORT_TYPE);
-      await ptChar.startNotifications();
-      ptChar.addEventListener('characteristicvaluechanged', onPortType);
-    } catch {
-      log('⚠️ Info de puerto no disponible (no es crítico)', 'info');
-    }
-
-    await applyPortConfig();
+    // Servicio Hub (detección automática de puertos)
+    const hubSvc = await server.getPrimaryService(UUID.HUB_SERVICE);
+    const ptChar = await hubSvc.getCharacteristic(UUID.PORT_TYPE);
+    await ptChar.startNotifications();
+    ptChar.addEventListener('characteristicvaluechanged', onPortType);
+    log('🔌 Port type notifications activadas', 'ok');
+    log('⏳ Detectando dispositivos conectados...', 'info');
 
     isConnected = true;
     const btn = document.getElementById('connectBtn');
     btn.textContent = '✅ ' + (dev.name || 'Hub conectado');
     btn.classList.add('connected');
     setStatus('Conectado: ' + (dev.name || 'WeDo Hub'), 'ok');
-
     dev.addEventListener('gattserverdisconnected', onDisconnect);
 
   } catch (e) {
@@ -369,6 +348,9 @@ async function connectHub() {
 function onDisconnect() {
   isConnected = false;
   outputChar = inputChar = sensorChar = null;
+  detectedPorts.motor = detectedPorts.tilt = detectedPorts.motion = null;
+  for (const k of Object.keys(portCfg)) delete portCfg[k];
+  updatePortDisplay();
   const btn = document.getElementById('connectBtn');
   btn.textContent = '🔵 Conectar Hub';
   btn.classList.remove('connected');
@@ -376,18 +358,76 @@ function onDisconnect() {
   log('❌ Hub desconectado', 'err');
 }
 
-// ── Sensores ────────────────────────────────────────
+// ── Detección automática de puertos ─────────────────
+// El hub envía notificaciones PORT_TYPE al conectar con el estado
+// actual de cada puerto, y después al enchufar/desenchufar algo.
 
-function onPortType(e) {
+async function onPortType(e) {
   const d = new Uint8Array(e.target.value.buffer);
-  if (d.length < 3) return;
-  const ch = d[0], added = d[1] === 1;
-  if (added && d.length >= 4) {
-    const t = d[3];
-    const name = t === 0x01 ? 'Motor' : t === 0x22 ? 'Inclinación' : t === 0x23 ? 'Movimiento' : '?';
-    log(`🔌 Puerto ${ch}: ${name} detectado`, 'info');
+  if (d.length < 2) return;
+  const ch    = d[0];
+  const added = d[1] === 1;
+
+  if (!added) {
+    // Dispositivo desconectado de este puerto
+    for (const key of Object.keys(detectedPorts)) {
+      if (detectedPorts[key] === ch) detectedPorts[key] = null;
+    }
+    portCfg[ch] = null;
+    updatePortDisplay();
+    log(`🔌 Puerto ${ch}: desconectado`, 'info');
+    return;
+  }
+
+  if (d.length < 4) return;
+  const typeId = d[3];
+
+  if (typeId === 0x01) {
+    detectedPorts.motor = ch;
+    portCfg[ch] = 'motor';
+    log(`🔌 Puerto ${ch}: ⚙️ Motor detectado`, 'ok');
+
+  } else if (typeId === 0x22) {
+    detectedPorts.tilt = ch;
+    portCfg[ch] = 'tilt';
+    log(`🔌 Puerto ${ch}: 📐 Sensor inclinación detectado`, 'ok');
+    await configureSensor(ch, typeId);
+
+  } else if (typeId === 0x23) {
+    detectedPorts.motion = ch;
+    portCfg[ch] = 'motion';
+    log(`🔌 Puerto ${ch}: 📏 Sensor movimiento detectado`, 'ok');
+    await configureSensor(ch, typeId);
+
+  } else {
+    log(`🔌 Puerto ${ch}: dispositivo desconocido (tipo 0x${typeId.toString(16)})`, 'info');
+  }
+
+  updatePortDisplay();
+}
+
+function updatePortDisplay() {
+  const labels = { motor: '⚙️ Motor', tilt: '📐 Inclinación', motion: '📏 Movimiento' };
+  for (const p of [1, 2]) {
+    const el = document.getElementById(`port${p}Label`);
+    if (el) el.textContent = labels[portCfg[p]] || '— vacío';
   }
 }
+
+async function configureSensor(ch, deviceType) {
+  if (!inputChar) return;
+  try {
+    await inputChar.writeValueWithResponse(
+      new Uint8Array([0x01, 0x02, ch, deviceType, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x01])
+    );
+    await inputChar.writeValueWithResponse(new Uint8Array([0x00, 0x01, ch]));
+    log(`⚙️ Sensor puerto ${ch} configurado`, 'ok');
+  } catch (err) {
+    log(`⚠️ Error configurando sensor ${ch}: ` + err.message, 'err');
+  }
+}
+
+// ── Lectura de sensores ──────────────────────────────
 
 function onSensorValue(e) {
   const d   = new Uint8Array(e.target.value.buffer);
@@ -407,61 +447,35 @@ function onSensorValue(e) {
   }
 }
 
-async function applyPortConfig() {
-  portCfg[1] = document.getElementById('p1').value;
-  portCfg[2] = document.getElementById('p2').value;
-  if (!inputChar) return;
+// ── Comandos de motor (sin puerto: auto-detectado) ───
 
-  for (const [p, type] of Object.entries(portCfg)) {
-    const ch  = parseInt(p);
-    const dev = type === 'motion' ? DEVICE.MOTION
-              : type === 'tilt'   ? DEVICE.TILT
-              : null;
-    if (!dev) continue;
-    try {
-      await inputChar.writeValueWithResponse(
-        new Uint8Array([0x01, 0x02, ch, dev, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x01])
-      );
-      await inputChar.writeValueWithResponse(new Uint8Array([0x00, 0x01, ch]));
-      log(`⚙️ Puerto ${ch} (${type}) configurado`, 'ok');
-    } catch (err) {
-      log(`⚠️ Error configurando puerto ${ch}: ` + err.message, 'err');
-    }
-  }
-}
-
-function updatePorts() { applyPortConfig(); }
-
-// ── Comandos de salida ──────────────────────────────
-
-async function motorOn(port, speed) {
-  if (!outputChar) { log('⚠️ Hub no conectado', 'err'); return; }
+async function motorOn(direction, speed) {
+  if (!outputChar)              { log('⚠️ Hub no conectado', 'err'); return; }
+  if (detectedPorts.motor === null) { log('⚠️ Motor no detectado. ¿Está conectado al hub?', 'err'); return; }
   speed = Math.max(1, Math.min(5, Math.round(speed)));
-  await outputChar.writeValueWithResponse(new Uint8Array([port, 0x01, 0x01, SPD_F[speed]]));
-  log(`⚙️ Motor ${port} ▶ vel.${speed}`, 'cmd');
+  const speedByte = direction === 'cw' ? SPD_CW[speed] : SPD_CCW[speed];
+  await outputChar.writeValueWithResponse(
+    new Uint8Array([detectedPorts.motor, 0x01, 0x01, speedByte])
+  );
+  log(`⚙️ Motor ${direction === 'cw' ? '↻' : '↺'} vel.${speed}`, 'cmd');
 }
 
-async function motorReverse(port, speed) {
-  if (!outputChar) { log('⚠️ Hub no conectado', 'err'); return; }
-  speed = Math.max(1, Math.min(5, Math.round(speed)));
-  await outputChar.writeValueWithResponse(new Uint8Array([port, 0x01, 0x01, SPD_R[speed]]));
-  log(`⚙️ Motor ${port} ◀ vel.${speed}`, 'cmd');
-}
-
-async function motorOff(port) {
-  if (!outputChar) return;
-  await outputChar.writeValueWithResponse(new Uint8Array([port, 0x01, 0x01, 0x7f]));
-  log(`⏹ Motor ${port} parado`, 'cmd');
+async function motorOff() {
+  if (!outputChar || detectedPorts.motor === null) return;
+  await outputChar.writeValueWithResponse(
+    new Uint8Array([detectedPorts.motor, 0x01, 0x01, 0x7f])
+  );
+  log('⏹ Motor parado', 'cmd');
 }
 
 async function setLed(colorName) {
   if (!outputChar) return;
-  const idx = LED[colorName] ?? 3;
+  const idx = LED_COLORS[colorName] ?? 3;
   await outputChar.writeValueWithResponse(new Uint8Array([0x06, 0x04, 0x01, idx]));
   log(`💡 LED → ${colorName}`, 'cmd');
 }
 
-// ── Helpers de ejecución ────────────────────────────
+// ── Helpers para código generado ─────────────────────
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -479,133 +493,135 @@ async function waitUntil(condFn, timeoutMs = 60000) {
 
 const JS = Blockly.JavaScript;
 
+// ── 🚩 Bandera verde ──────────────────────────────────
 Blockly.Blocks['wedo_when_flag'] = {
   init() {
     this.appendDummyInput().appendField('▶  Al pulsar PLAY');
     this.setNextStatement(true, null);
     this.setColour('#E6821E');
-    this.setTooltip('El programa comienza aquí cuando pulsas el botón ▶');
+    this.setTooltip('El programa empieza aquí al pulsar ▶');
   }
 };
 JS['wedo_when_flag'] = () => '';
 
+// ── ⚙️ Encender motor (se queda encendido) ───────────
 Blockly.Blocks['wedo_motor_on'] = {
   init() {
     this.appendDummyInput()
-      .appendField('⚙️ encender motor puerto')
-      .appendField(new Blockly.FieldDropdown([['1','1'],['2','2']]), 'PORT');
+      .appendField('⚙️ encender motor')
+      .appendField(new Blockly.FieldDropdown([
+        ['↻ horario',     'cw'],
+        ['↺ antihorario', 'ccw']
+      ]), 'DIR');
     this.appendValueInput('SPEED').setCheck('Number').appendField('velocidad');
     this.appendDummyInput().appendField('(1–5)');
     this.setInputsInline(true);
-    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
     this.setColour('#4C97FF');
-    this.setTooltip('Enciende el motor hacia adelante (1=lento, 5=rápido)');
+    this.setTooltip('Enciende el motor y lo deja girando hasta que uses "apagar motor".');
   }
 };
 JS['wedo_motor_on'] = b => {
-  const port  = b.getFieldValue('PORT');
+  const dir   = b.getFieldValue('DIR');
   const speed = JS.valueToCode(b, 'SPEED', JS.ORDER_ATOMIC) || '3';
-  return `await motorOn(${port}, ${speed});\n`;
+  return `await motorOn('${dir}', ${speed});\n`;
 };
 
-Blockly.Blocks['wedo_motor_reverse'] = {
-  init() {
-    this.appendDummyInput()
-      .appendField('⚙️ motor atrás puerto')
-      .appendField(new Blockly.FieldDropdown([['1','1'],['2','2']]), 'PORT');
-    this.appendValueInput('SPEED').setCheck('Number').appendField('velocidad');
-    this.appendDummyInput().appendField('(1–5)');
-    this.setInputsInline(true);
-    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
-    this.setColour('#4C97FF');
-    this.setTooltip('Enciende el motor hacia atrás');
-  }
-};
-JS['wedo_motor_reverse'] = b => {
-  const port  = b.getFieldValue('PORT');
-  const speed = JS.valueToCode(b, 'SPEED', JS.ORDER_ATOMIC) || '3';
-  return `await motorReverse(${port}, ${speed});\n`;
-};
-
+// ── ⏹ Apagar motor ───────────────────────────────────
 Blockly.Blocks['wedo_motor_off'] = {
   init() {
-    this.appendDummyInput()
-      .appendField('⏹ apagar motor puerto')
-      .appendField(new Blockly.FieldDropdown([['1','1'],['2','2']]), 'PORT');
-    this.setInputsInline(true);
-    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+    this.appendDummyInput().appendField('⏹ apagar motor');
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
     this.setColour('#4C97FF');
     this.setTooltip('Para el motor completamente');
   }
 };
-JS['wedo_motor_off'] = b => `await motorOff(${b.getFieldValue('PORT')});\n`;
+JS['wedo_motor_off'] = () => `await motorOff();\n`;
 
+// ── ⚙️ Mover durante X segundos ──────────────────────
 Blockly.Blocks['wedo_motor_time'] = {
   init() {
     this.appendDummyInput()
-      .appendField('⚙️ mover motor puerto')
-      .appendField(new Blockly.FieldDropdown([['1','1'],['2','2']]), 'PORT');
+      .appendField('⚙️ mover motor')
+      .appendField(new Blockly.FieldDropdown([
+        ['↻ horario',     'cw'],
+        ['↺ antihorario', 'ccw']
+      ]), 'DIR');
     this.appendValueInput('SPEED').setCheck('Number').appendField('velocidad');
     this.appendValueInput('TIME').setCheck('Number').appendField('durante');
     this.appendDummyInput().appendField('segundos');
     this.setInputsInline(true);
-    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
     this.setColour('#4C97FF');
-    this.setTooltip('Mueve el motor el tiempo indicado y lo para solo');
+    this.setTooltip('Mueve el motor el tiempo indicado y lo para automáticamente');
   }
 };
 JS['wedo_motor_time'] = b => {
-  const port  = b.getFieldValue('PORT');
+  const dir   = b.getFieldValue('DIR');
   const speed = JS.valueToCode(b, 'SPEED', JS.ORDER_ATOMIC) || '3';
   const time  = JS.valueToCode(b, 'TIME',  JS.ORDER_ATOMIC) || '1';
-  return `await motorOn(${port},${speed});\nawait sleep(${time}*1000);\nawait motorOff(${port});\n`;
+  return `await motorOn('${dir}', ${speed});\nawait sleep(${time}*1000);\nawait motorOff();\n`;
 };
 
+// ── 💡 LED ────────────────────────────────────────────
 Blockly.Blocks['wedo_led'] = {
   init() {
     this.appendDummyInput()
-      .appendField('💡 poner LED de color')
+      .appendField('💡 LED de color')
       .appendField(new Blockly.FieldDropdown([
-        ['🔵 azul','azul'], ['🟢 verde','verde'], ['🔴 rojo','rojo'],
+        ['🔵 azul','azul'],     ['🟢 verde','verde'],    ['🔴 rojo','rojo'],
         ['🟡 amarillo','amarillo'], ['🟠 naranja','naranja'], ['🟣 violeta','violeta'],
-        ['🩷 rosa','rosa'], ['🩵 cian','cian'], ['⚪ blanco','blanco'], ['⚫ apagado','apagado'],
+        ['🩷 rosa','rosa'],     ['🩵 cian','cian'],      ['⚪ blanco','blanco'], ['⚫ apagado','apagado'],
       ]), 'COLOR');
-    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
     this.setColour('#9966FF');
     this.setTooltip('Cambia el color de la luz del hub');
   }
 };
 JS['wedo_led'] = b => `await setLed('${b.getFieldValue('COLOR')}');\n`;
 
+// ── 📏 Sensor movimiento (valor) ──────────────────────
 Blockly.Blocks['wedo_sensor_motion'] = {
   init() {
-    this.appendDummyInput().appendField('📏 distancia movimiento');
-    this.setOutput(true, 'Number'); this.setColour('#5CB1D6');
-    this.setTooltip('Valor de distancia del sensor de movimiento');
+    this.appendDummyInput().appendField('📏 distancia');
+    this.setOutput(true, 'Number');
+    this.setColour('#5CB1D6');
+    this.setTooltip('Distancia medida por el sensor de movimiento');
   }
 };
 JS['wedo_sensor_motion'] = () => ['sensorData.motion', JS.ORDER_MEMBER];
 
+// ── 📐 Inclinación (valor numérico) ───────────────────
 Blockly.Blocks['wedo_sensor_tilt_val'] = {
   init() {
     this.appendDummyInput().appendField('📐 valor inclinación');
-    this.setOutput(true, 'Number'); this.setColour('#5CB1D6');
+    this.setOutput(true, 'Number');
+    this.setColour('#5CB1D6');
     this.setTooltip('0=plano, 1=atrás, 2=adelante, 3=derecha, 4=izquierda');
   }
 };
 JS['wedo_sensor_tilt_val'] = () => ['sensorData.tilt', JS.ORDER_MEMBER];
 
+// ── 📐 Inclinación (booleano) ─────────────────────────
 Blockly.Blocks['wedo_sensor_tilt_bool'] = {
   init() {
     this.appendDummyInput()
       .appendField('📐 ¿inclinado')
       .appendField(new Blockly.FieldDropdown([
-        ['en cualquier dirección','any'],
-        ['hacia adelante','2'], ['hacia atrás','1'],
-        ['hacia la derecha','3'], ['hacia la izquierda','4'], ['plano','0'],
+        ['en cualquier dirección', 'any'],
+        ['hacia adelante',  '2'],
+        ['hacia atrás',     '1'],
+        ['a la derecha',    '3'],
+        ['a la izquierda',  '4'],
+        ['plano',           '0'],
       ]), 'DIR')
       .appendField('?');
-    this.setOutput(true, 'Boolean'); this.setColour('#5CB1D6');
+    this.setOutput(true, 'Boolean');
+    this.setColour('#5CB1D6');
     this.setTooltip('Verdadero si el sensor tiene esa inclinación ahora mismo');
   }
 };
@@ -615,12 +631,14 @@ JS['wedo_sensor_tilt_bool'] = b => {
   return [expr, JS.ORDER_EQUALITY];
 };
 
+// ── ⏱ Esperar N segundos ─────────────────────────────
 Blockly.Blocks['wedo_wait'] = {
   init() {
     this.appendValueInput('TIME').setCheck('Number').appendField('⏱ esperar');
     this.appendDummyInput().appendField('segundos');
     this.setInputsInline(true);
-    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
     this.setColour('#FFAB19');
     this.setTooltip('Espera los segundos indicados antes de continuar');
   }
@@ -630,13 +648,15 @@ JS['wedo_wait'] = b => {
   return `await sleep(${t}*1000);\n`;
 };
 
+// ── 🔢 Repetir N veces ────────────────────────────────
 Blockly.Blocks['wedo_repeat'] = {
   init() {
     this.appendValueInput('TIMES').setCheck('Number').appendField('🔢 repetir');
     this.appendDummyInput().appendField('veces');
     this.appendStatementInput('DO').setCheck(null).appendField('hacer');
     this.setInputsInline(true);
-    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
     this.setColour('#FFAB19');
     this.setTooltip('Repite los bloques el número de veces indicado');
   }
@@ -647,6 +667,7 @@ JS['wedo_repeat'] = b => {
   return `for (let _i=0; _i<${n} && isRunning; _i++) {\n${body}}\n`;
 };
 
+// ── 🔁 Por siempre ────────────────────────────────────
 Blockly.Blocks['wedo_forever'] = {
   init() {
     this.appendDummyInput().appendField('🔁 por siempre');
@@ -661,13 +682,15 @@ JS['wedo_forever'] = b => {
   return `while (isRunning) {\n${body}await sleep(20);\n}\n`;
 };
 
+// ── ⏳ Esperar hasta que ───────────────────────────────
 Blockly.Blocks['wedo_wait_until'] = {
   init() {
     this.appendValueInput('COND').setCheck('Boolean').appendField('⏳ esperar hasta que');
     this.setInputsInline(true);
-    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
     this.setColour('#FFAB19');
-    this.setTooltip('Espera hasta que la condición sea verdadera');
+    this.setTooltip('Espera hasta que la condición sea verdadera (máx. 60 seg)');
   }
 };
 JS['wedo_wait_until'] = b => {
@@ -706,17 +729,20 @@ async function runProgram() {
   log('─────────────────────', 'info');
   log('🚀 Programa iniciado', 'ok');
 
+  // FIX: no llamamos motorOff() al terminar naturalmente.
+  // El motor queda en su último estado.
+  // Solo se para cuando el usuario pulsa ⏹ (stopProgram).
   const program = `(async () => {
-    try { ${code} }
-    catch (e) { if (isRunning) log('❌ Error: ' + e.message, 'err'); }
-    finally {
+    try {
+      ${code}
+    } catch (e) {
+      if (isRunning) log('❌ Error en programa: ' + e.message, 'err');
+    } finally {
       isRunning = false;
       document.getElementById('playBtn').classList.remove('running');
       document.getElementById('playBtn').textContent = '▶';
       setStatus('Listo', 'ok');
       log('✅ Programa terminado', 'ok');
-      await motorOff(1).catch(()=>{});
-      await motorOff(2).catch(()=>{});
     }
   })();`;
 
@@ -735,8 +761,8 @@ function stopProgram() {
   document.getElementById('playBtn').textContent = '▶';
   setStatus('Listo', 'ok');
   log('⏹ Parado por el usuario', 'info');
-  motorOff(1).catch(()=>{});
-  motorOff(2).catch(()=>{});
+  // Solo aquí paramos el motor (al pulsar el botón de stop)
+  motorOff().catch(() => {});
 }
 
 // ══════════════════════════════════════════════════════
@@ -761,23 +787,17 @@ function log(msg, cls) {
 
 function clearLog() { document.getElementById('logContent').innerHTML = ''; }
 
-// CAMBIO 1: toggle del panel de registro
-let logVisible = false; // por defecto oculto
+// FIX toggle: ahora funciona porque panel y botón son hermanos en flex row
+let logVisible = false;
 
 function toggleLog() {
-  const panel  = document.getElementById('logPanel');
-  const btn    = document.getElementById('logToggleBtn');
-  logVisible   = !logVisible;
-  if (logVisible) {
-    panel.classList.remove('hidden');
-    btn.textContent = '▶';
-    btn.title = 'Ocultar registro';
-  } else {
-    panel.classList.add('hidden');
-    btn.textContent = '◀';
-    btn.title = 'Mostrar registro';
-  }
-  // Refresca Blockly para que ocupe el espacio correcto
+  logVisible = !logVisible;
+  const panel = document.getElementById('logPanel');
+  const btn   = document.getElementById('logToggleBtn');
+  panel.classList.toggle('hidden', !logVisible);
+  btn.textContent = logVisible ? '▶' : '◀';
+  btn.title       = logVisible ? 'Ocultar registro' : 'Mostrar registro';
+  // Redimensionar Blockly después de que termine la transición CSS (250ms)
   setTimeout(() => Blockly.svgResize(workspace), 260);
 }
 
@@ -821,8 +841,9 @@ Blockly.Xml.domToWorkspace(
 
 log('👋 ¡WeDo Blocks listo!', 'ok');
 log('① Conecta el hub con el botón azul', 'info');
-log('② Configura los puertos (motor/sensor)', 'info');
+log('② Los puertos se detectan automáticamente', 'info');
 log('③ Arrastra bloques y pulsa ▶ para ejecutar', 'info');
+log('④ Pulsa ⏹ para parar motores y programa', 'info');
 </script>
 </body>
 </html>
