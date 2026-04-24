@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🧱 WeDo Blocks</title>
 
-  <!-- Blockly 9 desde CDN -->
   <script src="https://unpkg.com/blockly@9.3.3/blockly_compressed.js"></script>
   <script src="https://unpkg.com/blockly@9.3.3/blocks_compressed.js"></script>
   <script src="https://unpkg.com/blockly@9.3.3/javascript_compressed.js"></script>
@@ -16,42 +15,34 @@
 
     body {
       font-family: 'Segoe UI', Tahoma, sans-serif;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
-      background: #1a1a2e;
-      color: white;
+      display: flex; flex-direction: column;
+      height: 100vh; overflow: hidden;
+      background: #1a1a2e; color: white;
     }
 
     /* ── Barra Superior ── */
     #topbar {
       background: linear-gradient(135deg, #16213e, #0f3460);
       padding: 8px 14px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      display: flex; align-items: center; gap: 10px;
       border-bottom: 3px solid #4a90d9;
-      flex-wrap: wrap;
-      min-height: 60px;
+      flex-wrap: wrap; min-height: 60px;
     }
     .logo {
-      font-size: 20px;
-      font-weight: 900;
-      color: #4a90d9;
-      white-space: nowrap;
-      margin-right: 4px;
+      font-size: 20px; font-weight: 900; color: #4a90d9;
+      white-space: nowrap; margin-right: 4px;
+    }
+    /* ← CAMBIO 2: nombre del autor */
+    .author {
+      font-size: 11px; color: #6a8ab8;
+      white-space: nowrap; margin-left: -6px;
+      align-self: flex-end; padding-bottom: 2px;
     }
 
     .btn {
-      padding: 7px 15px;
-      border: none;
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.15s;
-      white-space: nowrap;
+      padding: 7px 15px; border: none; border-radius: 20px;
+      font-size: 14px; font-weight: bold; cursor: pointer;
+      transition: all 0.15s; white-space: nowrap;
     }
     .btn:hover:not(:disabled) { filter: brightness(1.15); }
     .btn:active:not(:disabled) { transform: scale(0.95); }
@@ -61,19 +52,16 @@
     #connectBtn.connected { background: #17a2b8; }
 
     .round-btn {
-      width: 46px; height: 46px;
-      border-radius: 50% !important;
-      font-size: 20px;
-      display: flex; align-items: center; justify-content: center;
+      width: 46px; height: 46px; border-radius: 50% !important;
+      font-size: 20px; display: flex; align-items: center; justify-content: center;
       padding: 0 !important;
     }
-    #playBtn { background: #4caf50; color: white; }
+    #playBtn  { background: #4caf50; color: white; }
     #playBtn.running { background: #ff9800; }
-    #stopBtn { background: #e53935; color: white; }
+    #stopBtn  { background: #e53935; color: white; }
 
     .divider { width: 1px; height: 38px; background: #3a3a5a; flex-shrink: 0; }
 
-    /* Configuración de puertos */
     .port-cfg {
       display: flex; align-items: center; gap: 6px;
       background: rgba(255,255,255,0.07);
@@ -86,7 +74,6 @@
       border-radius: 6px; padding: 3px 7px; font-size: 13px; cursor: pointer;
     }
 
-    /* Sensores en tiempo real */
     .sensor-pill {
       background: rgba(255,255,255,0.07);
       padding: 4px 12px; border-radius: 10px;
@@ -97,7 +84,6 @@
       color: #ffd700; line-height: 1.3;
     }
 
-    /* Estado */
     #statusBar {
       font-size: 12px; color: #888;
       background: rgba(255,255,255,0.05);
@@ -111,22 +97,43 @@
     #statusBar.warn { color: #ff9800; }
 
     /* ── Área principal ── */
-    #main { flex: 1; display: flex; overflow: hidden; }
+    #main { flex: 1; display: flex; overflow: hidden; position: relative; }
     #blocklyDiv { flex: 1; height: 100%; }
 
-    /* ── Panel de registro ── */
+    /* ── CAMBIO 1: Panel de registro con toggle ── */
     #logPanel {
       width: 210px; min-width: 210px;
       background: #0d0d1a;
       border-left: 2px solid #2a2a4a;
       display: flex; flex-direction: column;
       overflow: hidden;
+      transition: width 0.25s ease, min-width 0.25s ease, opacity 0.25s ease;
     }
+    #logPanel.hidden {
+      width: 0; min-width: 0; opacity: 0; border-left: none;
+    }
+
+    /* Botón de toggle pegado al borde izquierdo del panel */
+    #logToggleBtn {
+      position: absolute;
+      right: 0; top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      width: 18px; height: 56px;
+      background: #2a2a4a;
+      border: none; border-radius: 8px 0 0 8px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: #aaa; font-size: 12px;
+      transition: right 0.25s ease, background 0.15s;
+    }
+    #logToggleBtn:hover { background: #3a3a6a; color: white; }
+
     #logHeader {
-      padding: 7px 10px;
-      background: #12122a;
+      padding: 7px 10px; background: #12122a;
       border-bottom: 1px solid #2a2a4a;
       display: flex; justify-content: space-between; align-items: center;
+      white-space: nowrap;
     }
     #logHeader span { font-size: 12px; color: #888; text-transform: uppercase; font-weight: bold; }
     #clearLogBtn {
@@ -152,6 +159,8 @@
 <!-- ── Barra superior ── -->
 <div id="topbar">
   <div class="logo">🧱 WeDo Blocks</div>
+  <!-- CAMBIO 2: nombre del autor -->
+  <div class="author">by Jose I. Yagüe</div>
 
   <button class="btn" id="connectBtn" onclick="connectHub()">🔵 Conectar Hub</button>
 
@@ -198,7 +207,10 @@
 <div id="main">
   <div id="blocklyDiv"></div>
 
-  <div id="logPanel">
+  <!-- CAMBIO 1: botón toggle del registro -->
+  <button id="logToggleBtn" onclick="toggleLog()" title="Mostrar/ocultar registro">◀</button>
+
+  <div id="logPanel" class="hidden">
     <div id="logHeader">
       <span>📋 Registro</span>
       <button id="clearLogBtn" onclick="clearLog()">Borrar</button>
@@ -209,13 +221,10 @@
 
 <!-- ── Toolbox de Blockly ── -->
 <xml id="toolbox" style="display:none">
-
   <category name="🚩 Eventos" colour="#E6821E">
     <block type="wedo_when_flag"></block>
   </category>
-
   <sep></sep>
-
   <category name="⚙️ Motor" colour="#4C97FF">
     <block type="wedo_motor_on">
       <value name="SPEED"><block type="math_number"><field name="NUM">3</field></block></value>
@@ -229,19 +238,15 @@
       <value name="TIME"><block type="math_number"><field name="NUM">2</field></block></value>
     </block>
   </category>
-
   <category name="💡 LED" colour="#9966FF">
     <block type="wedo_led"></block>
   </category>
-
   <category name="📡 Sensores" colour="#5CB1D6">
     <block type="wedo_sensor_motion"></block>
     <block type="wedo_sensor_tilt_val"></block>
     <block type="wedo_sensor_tilt_bool"></block>
   </category>
-
   <sep></sep>
-
   <category name="🔁 Control" colour="#FFAB19">
     <block type="wedo_wait">
       <value name="TIME"><block type="math_number"><field name="NUM">1</field></block></value>
@@ -251,14 +256,11 @@
     </block>
     <block type="wedo_forever"></block>
     <block type="wedo_wait_until">
-      <value name="COND">
-        <block type="logic_boolean"><field name="BOOL">TRUE</field></block>
-      </value>
+      <value name="COND"><block type="logic_boolean"><field name="BOOL">TRUE</field></block></value>
     </block>
     <block type="controls_if"></block>
     <block type="controls_if"><mutation else="1"></mutation></block>
   </category>
-
   <category name="🔢 Operadores" colour="#59C059">
     <block type="logic_compare"><field name="OP">GT</field></block>
     <block type="logic_compare"><field name="OP">LT</field></block>
@@ -272,7 +274,6 @@
       <value name="TO"><block type="math_number"><field name="NUM">10</field></block></value>
     </block>
   </category>
-
 </xml>
 
 <script>
@@ -298,18 +299,15 @@ const LED = {
   cian: 4, verde: 5, amarillo: 6, naranja: 7, rojo: 8, blanco: 9
 };
 
-// Velocidades: nivel 1-5 → byte BLE (adelante / atrás)
 const SPD_F = [0, 0x20, 0x35, 0x50, 0x65, 0x7e];
 const SPD_R = [0, 0xe0, 0xcb, 0xb0, 0x9b, 0x82];
 
-// Handles BLE
 let bleDevice  = null;
 let outputChar = null;
 let inputChar  = null;
 let sensorChar = null;
 let isConnected = false;
 
-// Configuración de puertos y datos de sensores
 let portCfg = { 1: 'motor', 2: 'motor' };
 const sensorData = { motion: 0, tilt: 0 };
 
@@ -318,9 +316,15 @@ const sensorData = { motion: 0, tilt: 0 };
 async function connectHub() {
   try {
     setStatus('Buscando hub...', '');
+
+    // CAMBIO 3: filtramos por el UUID del servicio WeDo.
+    // Así el diálogo solo muestra hubs WeDo con su nombre real
+    // en lugar de "Dispositivo desconocido".
     const dev = await navigator.bluetooth.requestDevice({
-      acceptAllDevices: true,
-      optionalServices: [UUID.HUB_SERVICE, UUID.IO_SERVICE]
+      filters: [
+        { services: [UUID.HUB_SERVICE] }
+      ],
+      optionalServices: [UUID.IO_SERVICE]
     });
 
     setStatus('Conectando...', '');
@@ -328,18 +332,15 @@ async function connectHub() {
     const server = await dev.gatt.connect();
     log('✅ GATT conectado', 'ok');
 
-    // Servicio I/O (motores y sensores)
     const ioSvc = await server.getPrimaryService(UUID.IO_SERVICE);
     outputChar  = await ioSvc.getCharacteristic(UUID.OUTPUT_CMD);
     inputChar   = await ioSvc.getCharacteristic(UUID.INPUT_CMD);
     sensorChar  = await ioSvc.getCharacteristic(UUID.SENSOR_VALUE);
 
-    // Notificaciones de valores de sensor
     await sensorChar.startNotifications();
     sensorChar.addEventListener('characteristicvaluechanged', onSensorValue);
     log('📡 Sensores activados', 'ok');
 
-    // Notificaciones de tipo de puerto (hub service) — opcional
     try {
       const hubSvc = await server.getPrimaryService(UUID.HUB_SERVICE);
       const ptChar = await hubSvc.getCharacteristic(UUID.PORT_TYPE);
@@ -349,7 +350,6 @@ async function connectHub() {
       log('⚠️ Info de puerto no disponible (no es crítico)', 'info');
     }
 
-    // Configurar sensores según selección de puertos
     await applyPortConfig();
 
     isConnected = true;
@@ -376,7 +376,7 @@ function onDisconnect() {
   log('❌ Hub desconectado', 'err');
 }
 
-// ── Lectura de sensores ─────────────────────────────
+// ── Sensores ────────────────────────────────────────
 
 function onPortType(e) {
   const d = new Uint8Array(e.target.value.buffer);
@@ -390,25 +390,22 @@ function onPortType(e) {
 }
 
 function onSensorValue(e) {
-  const d  = new Uint8Array(e.target.value.buffer);
+  const d   = new Uint8Array(e.target.value.buffer);
   if (d.length < 6) return;
   const ch  = d[1];
   const dv  = new DataView(e.target.value.buffer);
-  const val = dv.getFloat32(2, true); // little-endian
+  const val = dv.getFloat32(2, true);
   const type = portCfg[ch];
 
   if (type === 'motion') {
     sensorData.motion = Math.round(val * 10) / 10;
     document.getElementById('motionVal').textContent = sensorData.motion;
   } else if (type === 'tilt') {
-    // El sensor devuelve dirección como float (0.0–5.0)
     sensorData.tilt = Math.round(val);
     const nombres = ['plano', 'atrás', 'adelante', 'derecha', 'izquierda', '?'];
     document.getElementById('tiltVal').textContent = nombres[sensorData.tilt] ?? sensorData.tilt;
   }
 }
-
-// ── Configurar sensores ─────────────��───────────────
 
 async function applyPortConfig() {
   portCfg[1] = document.getElementById('p1').value;
@@ -422,7 +419,6 @@ async function applyPortConfig() {
               : null;
     if (!dev) continue;
     try {
-      // Modo 0x00 = detección para movimiento / dirección para inclinación
       await inputChar.writeValueWithResponse(
         new Uint8Array([0x01, 0x02, ch, dev, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x01])
       );
@@ -465,13 +461,10 @@ async function setLed(colorName) {
   log(`💡 LED → ${colorName}`, 'cmd');
 }
 
-// ── Helpers para el código generado ────────────────
+// ── Helpers de ejecución ────────────────────────────
 
-function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-// Espera hasta que condFn() devuelva true o se pare el programa
 async function waitUntil(condFn, timeoutMs = 60000) {
   const t0 = Date.now();
   while (isRunning && (Date.now() - t0) < timeoutMs) {
@@ -481,36 +474,32 @@ async function waitUntil(condFn, timeoutMs = 60000) {
 }
 
 // ══════════════════════════════════════════════════════
-//  BLOCKLY — Definición de bloques personalizados
+//  BLOCKLY — Bloques personalizados
 // ══════════════════════════════════════════════════════
 
 const JS = Blockly.JavaScript;
 
-// ── 🚩 Bandera verde (bloque de inicio) ─────────────
 Blockly.Blocks['wedo_when_flag'] = {
   init() {
-    this.appendDummyInput()
-      .appendField('▶  Al pulsar PLAY');
+    this.appendDummyInput().appendField('▶  Al pulsar PLAY');
     this.setNextStatement(true, null);
     this.setColour('#E6821E');
     this.setTooltip('El programa comienza aquí cuando pulsas el botón ▶');
   }
 };
-JS['wedo_when_flag'] = () => ''; // la ejecución empieza desde aquí
+JS['wedo_when_flag'] = () => '';
 
-// ── ⚙️ Encender motor (adelante) ────────────────────
 Blockly.Blocks['wedo_motor_on'] = {
   init() {
     this.appendDummyInput()
       .appendField('⚙️ encender motor puerto')
-      .appendField(new Blockly.FieldDropdown([['1', '1'], ['2', '2']]), 'PORT');
+      .appendField(new Blockly.FieldDropdown([['1','1'],['2','2']]), 'PORT');
     this.appendValueInput('SPEED').setCheck('Number').appendField('velocidad');
-    this.appendDummyInput().appendField('(1 – 5)');
+    this.appendDummyInput().appendField('(1–5)');
     this.setInputsInline(true);
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
+    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
     this.setColour('#4C97FF');
-    this.setTooltip('Enciende el motor hacia adelante a la velocidad indicada (1=lento, 5=rápido)');
+    this.setTooltip('Enciende el motor hacia adelante (1=lento, 5=rápido)');
   }
 };
 JS['wedo_motor_on'] = b => {
@@ -519,17 +508,15 @@ JS['wedo_motor_on'] = b => {
   return `await motorOn(${port}, ${speed});\n`;
 };
 
-// ── ⚙️ Motor marcha atrás ───────────────────────────
 Blockly.Blocks['wedo_motor_reverse'] = {
   init() {
     this.appendDummyInput()
       .appendField('⚙️ motor atrás puerto')
-      .appendField(new Blockly.FieldDropdown([['1', '1'], ['2', '2']]), 'PORT');
+      .appendField(new Blockly.FieldDropdown([['1','1'],['2','2']]), 'PORT');
     this.appendValueInput('SPEED').setCheck('Number').appendField('velocidad');
-    this.appendDummyInput().appendField('(1 – 5)');
+    this.appendDummyInput().appendField('(1–5)');
     this.setInputsInline(true);
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
+    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
     this.setColour('#4C97FF');
     this.setTooltip('Enciende el motor hacia atrás');
   }
@@ -540,33 +527,29 @@ JS['wedo_motor_reverse'] = b => {
   return `await motorReverse(${port}, ${speed});\n`;
 };
 
-// ── ⏹ Apagar motor ───────────────────────���──────────
 Blockly.Blocks['wedo_motor_off'] = {
   init() {
     this.appendDummyInput()
       .appendField('⏹ apagar motor puerto')
-      .appendField(new Blockly.FieldDropdown([['1', '1'], ['2', '2']]), 'PORT');
+      .appendField(new Blockly.FieldDropdown([['1','1'],['2','2']]), 'PORT');
     this.setInputsInline(true);
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
+    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
     this.setColour('#4C97FF');
     this.setTooltip('Para el motor completamente');
   }
 };
 JS['wedo_motor_off'] = b => `await motorOff(${b.getFieldValue('PORT')});\n`;
 
-// ── ⚙️ Motor durante X segundos ─────────────────────
 Blockly.Blocks['wedo_motor_time'] = {
   init() {
     this.appendDummyInput()
       .appendField('⚙️ mover motor puerto')
-      .appendField(new Blockly.FieldDropdown([['1', '1'], ['2', '2']]), 'PORT');
+      .appendField(new Blockly.FieldDropdown([['1','1'],['2','2']]), 'PORT');
     this.appendValueInput('SPEED').setCheck('Number').appendField('velocidad');
     this.appendValueInput('TIME').setCheck('Number').appendField('durante');
     this.appendDummyInput().appendField('segundos');
     this.setInputsInline(true);
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
+    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
     this.setColour('#4C97FF');
     this.setTooltip('Mueve el motor el tiempo indicado y lo para solo');
   }
@@ -575,73 +558,55 @@ JS['wedo_motor_time'] = b => {
   const port  = b.getFieldValue('PORT');
   const speed = JS.valueToCode(b, 'SPEED', JS.ORDER_ATOMIC) || '3';
   const time  = JS.valueToCode(b, 'TIME',  JS.ORDER_ATOMIC) || '1';
-  return `await motorOn(${port}, ${speed});\nawait sleep(${time} * 1000);\nawait motorOff(${port});\n`;
+  return `await motorOn(${port},${speed});\nawait sleep(${time}*1000);\nawait motorOff(${port});\n`;
 };
 
-// ── 💡 LED ───────────────────────────────────────────
 Blockly.Blocks['wedo_led'] = {
   init() {
     this.appendDummyInput()
       .appendField('💡 poner LED de color')
       .appendField(new Blockly.FieldDropdown([
-        ['🔵 azul',     'azul'],
-        ['🟢 verde',    'verde'],
-        ['🔴 rojo',     'rojo'],
-        ['🟡 amarillo', 'amarillo'],
-        ['🟠 naranja',  'naranja'],
-        ['🟣 violeta',  'violeta'],
-        ['🩷 rosa',     'rosa'],
-        ['🩵 cian',     'cian'],
-        ['⚪ blanco',   'blanco'],
-        ['⚫ apagado',  'apagado'],
+        ['🔵 azul','azul'], ['🟢 verde','verde'], ['🔴 rojo','rojo'],
+        ['🟡 amarillo','amarillo'], ['🟠 naranja','naranja'], ['🟣 violeta','violeta'],
+        ['🩷 rosa','rosa'], ['🩵 cian','cian'], ['⚪ blanco','blanco'], ['⚫ apagado','apagado'],
       ]), 'COLOR');
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
+    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
     this.setColour('#9966FF');
     this.setTooltip('Cambia el color de la luz del hub');
   }
 };
 JS['wedo_led'] = b => `await setLed('${b.getFieldValue('COLOR')}');\n`;
 
-// ── 📏 Sensor movimiento (valor numérico) ───────────
 Blockly.Blocks['wedo_sensor_motion'] = {
   init() {
     this.appendDummyInput().appendField('📏 distancia movimiento');
-    this.setOutput(true, 'Number');
-    this.setColour('#5CB1D6');
+    this.setOutput(true, 'Number'); this.setColour('#5CB1D6');
     this.setTooltip('Valor de distancia del sensor de movimiento');
   }
 };
 JS['wedo_sensor_motion'] = () => ['sensorData.motion', JS.ORDER_MEMBER];
 
-// ── 📐 Sensor inclinación (valor numérico) ──────────
 Blockly.Blocks['wedo_sensor_tilt_val'] = {
   init() {
     this.appendDummyInput().appendField('📐 valor inclinación');
-    this.setOutput(true, 'Number');
-    this.setColour('#5CB1D6');
-    this.setTooltip('Número de dirección: 0=plano, 1=atrás, 2=adelante, 3=derecha, 4=izquierda');
+    this.setOutput(true, 'Number'); this.setColour('#5CB1D6');
+    this.setTooltip('0=plano, 1=atrás, 2=adelante, 3=derecha, 4=izquierda');
   }
 };
 JS['wedo_sensor_tilt_val'] = () => ['sensorData.tilt', JS.ORDER_MEMBER];
 
-// ── 📐 Sensor inclinación (booleano de dirección) ───
 Blockly.Blocks['wedo_sensor_tilt_bool'] = {
   init() {
     this.appendDummyInput()
       .appendField('📐 ¿inclinado')
       .appendField(new Blockly.FieldDropdown([
-        ['en cualquier dirección', 'any'],
-        ['hacia adelante',         '2'],
-        ['hacia atrás',            '1'],
-        ['hacia la derecha',       '3'],
-        ['hacia la izquierda',     '4'],
-        ['plano',                  '0'],
+        ['en cualquier dirección','any'],
+        ['hacia adelante','2'], ['hacia atrás','1'],
+        ['hacia la derecha','3'], ['hacia la izquierda','4'], ['plano','0'],
       ]), 'DIR')
       .appendField('?');
-    this.setOutput(true, 'Boolean');
-    this.setColour('#5CB1D6');
-    this.setTooltip('Verdadero si el sensor tiene esa inclinación en este momento');
+    this.setOutput(true, 'Boolean'); this.setColour('#5CB1D6');
+    this.setTooltip('Verdadero si el sensor tiene esa inclinación ahora mismo');
   }
 };
 JS['wedo_sensor_tilt_bool'] = b => {
@@ -650,32 +615,28 @@ JS['wedo_sensor_tilt_bool'] = b => {
   return [expr, JS.ORDER_EQUALITY];
 };
 
-// ── ⏱ Esperar N segundos ────────────────────────────
 Blockly.Blocks['wedo_wait'] = {
   init() {
     this.appendValueInput('TIME').setCheck('Number').appendField('⏱ esperar');
     this.appendDummyInput().appendField('segundos');
     this.setInputsInline(true);
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
+    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
     this.setColour('#FFAB19');
     this.setTooltip('Espera los segundos indicados antes de continuar');
   }
 };
 JS['wedo_wait'] = b => {
   const t = JS.valueToCode(b, 'TIME', JS.ORDER_ATOMIC) || '1';
-  return `await sleep(${t} * 1000);\n`;
+  return `await sleep(${t}*1000);\n`;
 };
 
-// ── 🔢 Repetir N veces ──────────────────────────────
 Blockly.Blocks['wedo_repeat'] = {
   init() {
     this.appendValueInput('TIMES').setCheck('Number').appendField('🔢 repetir');
     this.appendDummyInput().appendField('veces');
     this.appendStatementInput('DO').setCheck(null).appendField('hacer');
     this.setInputsInline(true);
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
+    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
     this.setColour('#FFAB19');
     this.setTooltip('Repite los bloques el número de veces indicado');
   }
@@ -683,18 +644,16 @@ Blockly.Blocks['wedo_repeat'] = {
 JS['wedo_repeat'] = b => {
   const n    = JS.valueToCode(b, 'TIMES', JS.ORDER_ASSIGNMENT) || '0';
   const body = JS.statementToCode(b, 'DO') || 'await sleep(50);\n';
-  return `for (let _i = 0; _i < ${n} && isRunning; _i++) {\n${body}}\n`;
+  return `for (let _i=0; _i<${n} && isRunning; _i++) {\n${body}}\n`;
 };
 
-// ── 🔁 Por siempre ──────────────────────────────────
 Blockly.Blocks['wedo_forever'] = {
   init() {
     this.appendDummyInput().appendField('🔁 por siempre');
     this.appendStatementInput('DO').setCheck(null).appendField('hacer');
     this.setPreviousStatement(true, null);
-    // Sin nextStatement — nada puede ir después de un bucle infinito
     this.setColour('#FFAB19');
-    this.setTooltip('Repite los bloques sin parar hasta que pulses ⏹');
+    this.setTooltip('Repite sin parar hasta que pulses ⏹');
   }
 };
 JS['wedo_forever'] = b => {
@@ -702,20 +661,18 @@ JS['wedo_forever'] = b => {
   return `while (isRunning) {\n${body}await sleep(20);\n}\n`;
 };
 
-// ── ⏳ Esperar hasta que... ──────────────────────────
 Blockly.Blocks['wedo_wait_until'] = {
   init() {
     this.appendValueInput('COND').setCheck('Boolean').appendField('⏳ esperar hasta que');
     this.setInputsInline(true);
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
+    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
     this.setColour('#FFAB19');
-    this.setTooltip('Espera (hasta 60 segundos) hasta que la condición sea verdadera');
+    this.setTooltip('Espera hasta que la condición sea verdadera');
   }
 };
 JS['wedo_wait_until'] = b => {
   const cond = JS.valueToCode(b, 'COND', JS.ORDER_NONE) || 'true';
-  return `await waitUntil(() => (${cond}));\n`;
+  return `await waitUntil(()=>(${cond}));\n`;
 };
 
 // ══════════════════════════════════════════════════════
@@ -730,23 +687,15 @@ async function runProgram() {
     log('⚠️ Debes conectar el hub antes de ejecutar', 'err');
     return;
   }
-  if (isRunning) {
-    stopProgram();
-    return;
-  }
+  if (isRunning) { stopProgram(); return; }
 
-  // Generar JavaScript desde el workspace de Blockly
   let code;
-  try {
-    code = JS.workspaceToCode(workspace);
-  } catch (e) {
-    log('❌ Error generando código: ' + e, 'err');
-    return;
-  }
+  try { code = JS.workspaceToCode(workspace); }
+  catch (e) { log('❌ Error generando código: ' + e, 'err'); return; }
 
   if (!code.trim()) {
     setStatus('⚠️ Añade bloques primero', 'warn');
-    log('⚠️ El área de bloques está vacía. Arrastra bloques desde la izquierda.', 'err');
+    log('⚠️ El área de bloques está vacía', 'err');
     return;
   }
 
@@ -757,26 +706,22 @@ async function runProgram() {
   log('─────────────────────', 'info');
   log('🚀 Programa iniciado', 'ok');
 
-  // Envolver en función async — las variables del scope son accesibles via eval
   const program = `(async () => {
-    try {
-      ${code}
-    } catch (e) {
-      if (isRunning) log('❌ Error en programa: ' + e.message, 'err');
-    } finally {
+    try { ${code} }
+    catch (e) { if (isRunning) log('❌ Error: ' + e.message, 'err'); }
+    finally {
       isRunning = false;
       document.getElementById('playBtn').classList.remove('running');
       document.getElementById('playBtn').textContent = '▶';
       setStatus('Listo', 'ok');
       log('✅ Programa terminado', 'ok');
-      await motorOff(1).catch(() => {});
-      await motorOff(2).catch(() => {});
+      await motorOff(1).catch(()=>{});
+      await motorOff(2).catch(()=>{});
     }
   })();`;
 
-  try {
-    eval(program);
-  } catch (e) {
+  try { eval(program); }
+  catch (e) {
     isRunning = false;
     document.getElementById('playBtn').classList.remove('running');
     document.getElementById('playBtn').textContent = '▶';
@@ -790,8 +735,8 @@ function stopProgram() {
   document.getElementById('playBtn').textContent = '▶';
   setStatus('Listo', 'ok');
   log('⏹ Parado por el usuario', 'info');
-  motorOff(1).catch(() => {});
-  motorOff(2).catch(() => {});
+  motorOff(1).catch(()=>{});
+  motorOff(2).catch(()=>{});
 }
 
 // ══════════════════════════════════════════════════════
@@ -800,31 +745,46 @@ function stopProgram() {
 
 function setStatus(msg, cls) {
   const el = document.getElementById('statusBar');
-  el.textContent = msg;
-  el.className = cls || '';
+  el.textContent = msg; el.className = cls || '';
 }
 
 function log(msg, cls) {
   const box = document.getElementById('logContent');
   const d   = document.createElement('div');
   d.className = 'e ' + (cls || '');
-  const t = new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const t = new Date().toLocaleTimeString('es', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
   d.textContent = `[${t}] ${msg}`;
   box.appendChild(d);
   box.scrollTop = box.scrollHeight;
-  // Mantener solo las últimas 150 líneas
   while (box.children.length > 150) box.removeChild(box.firstChild);
 }
 
-function clearLog() {
-  document.getElementById('logContent').innerHTML = '';
+function clearLog() { document.getElementById('logContent').innerHTML = ''; }
+
+// CAMBIO 1: toggle del panel de registro
+let logVisible = false; // por defecto oculto
+
+function toggleLog() {
+  const panel  = document.getElementById('logPanel');
+  const btn    = document.getElementById('logToggleBtn');
+  logVisible   = !logVisible;
+  if (logVisible) {
+    panel.classList.remove('hidden');
+    btn.textContent = '▶';
+    btn.title = 'Ocultar registro';
+  } else {
+    panel.classList.add('hidden');
+    btn.textContent = '◀';
+    btn.title = 'Mostrar registro';
+  }
+  // Refresca Blockly para que ocupe el espacio correcto
+  setTimeout(() => Blockly.svgResize(workspace), 260);
 }
 
 // ══════════════════════════════════════════════════════
 //  INICIAR BLOCKLY
 // ══════════════════════════════════════════════════════
 
-// Tema oscuro personalizado
 let weDoTheme;
 try {
   weDoTheme = Blockly.Theme.defineTheme('wedoDark', {
@@ -840,26 +800,16 @@ try {
       scrollbarOpacity:          0.6,
     }
   });
-} catch {
-  weDoTheme = Blockly.Themes.Classic;
-}
+} catch { weDoTheme = Blockly.Themes.Classic; }
 
 const workspace = Blockly.inject('blocklyDiv', {
   toolbox:    document.getElementById('toolbox'),
-  scrollbars: true,
-  trashcan:   true,
-  sounds:     false,
+  scrollbars: true, trashcan: true, sounds: false,
   theme:      weDoTheme,
-  grid: {
-    spacing: 22, length: 4, colour: '#2a2a3a', snap: true
-  },
-  zoom: {
-    controls: true, wheel: true,
-    startScale: 1.1, maxScale: 2.5, minScale: 0.4, scaleSpeed: 1.2
-  }
+  grid: { spacing: 22, length: 4, colour: '#2a2a3a', snap: true },
+  zoom: { controls: true, wheel: true, startScale: 1.1, maxScale: 2.5, minScale: 0.4, scaleSpeed: 1.2 }
 });
 
-// Añadir el bloque de inicio automáticamente (no se puede borrar)
 Blockly.Xml.domToWorkspace(
   Blockly.Xml.textToDom(`
     <xml>
@@ -869,12 +819,10 @@ Blockly.Xml.domToWorkspace(
   workspace
 );
 
-// Mensaje de bienvenida
 log('👋 ¡WeDo Blocks listo!', 'ok');
 log('① Conecta el hub con el botón azul', 'info');
 log('② Configura los puertos (motor/sensor)', 'info');
 log('③ Arrastra bloques y pulsa ▶ para ejecutar', 'info');
-log('④ Pulsa ⏹ para parar en cualquier momento', 'info');
 </script>
 </body>
 </html>
