@@ -144,7 +144,7 @@
   <div class="author">by Jose I. Yagüe</div>
 
   <button class="btn" id="connectBtn" onclick="connectHub()">🔵 Conectar Hub</button>
-  <button class="btn" id="renameBtn"  onclick="renameHub()"  title="Cambia el nombre del hub (se guarda en su memoria)">✏️ Renombrar hub</button>
+  <button class="btn" id="renameBtn"  onclick="renameHub()" title="Cambia el nombre del hub">✏️ Renombrar hub</button>
 
   <div class="divider"></div>
 
@@ -174,7 +174,6 @@
 
 <div id="main">
   <div id="blocklyDiv"></div>
-
   <div id="sideContainer">
     <button id="logToggleBtn" onclick="toggleLog()" title="Mostrar registro">◀</button>
     <div id="logPanel" class="hidden">
@@ -253,12 +252,11 @@ const UUID = {
   INPUT_CMD:    '00001563-1212-efde-1523-785feabcd123',
   SENSOR_VALUE: '00001560-1212-efde-1523-785feabcd123',
   PORT_TYPE:    '00001527-1212-efde-1523-785feabcd123',
-  HUB_NAME:     '00001524-1212-efde-1523-785feabcd123',  // ← renombrar hub
+  HUB_NAME:     '00001524-1212-efde-1523-785feabcd123',
 };
 
-// Velocidades nivel 1–5 en byte BLE
-const SPD_CW  = [0, 0x20, 0x35, 0x50, 0x65, 0x7e]; // ↻ horario
-const SPD_CCW = [0, 0xe0, 0xcb, 0xb0, 0x9b, 0x82]; // ↺ antihorario
+const SPD_CW  = [0, 0x20, 0x35, 0x50, 0x65, 0x7e];
+const SPD_CCW = [0, 0xe0, 0xcb, 0xb0, 0x9b, 0x82];
 
 const LED_COLORS = {
   apagado: 0, rosa: 1, violeta: 2, azul: 3,
@@ -269,10 +267,13 @@ let bleDevice   = null;
 let outputChar  = null;
 let inputChar   = null;
 let sensorChar  = null;
-let nameChar    = null;   // ← característica de nombre
+let nameChar    = null;
 let isConnected = false;
 
-const detectedPorts = { motor: null, tilt: null, motion: null };
+// detectedPorts.motors es ahora un array ordenado por orden de detección:
+// motors[0] = primer motor detectado (Motor 1)
+// motors[1] = segundo motor detectado (Motor 2)
+const detectedPorts = { motors: [], tilt: null, motion: null };
 const portCfg       = {};
 const sensorData    = { motion: 0, tilt: 0 };
 
@@ -291,7 +292,6 @@ async function connectHub() {
     const server = await dev.gatt.connect();
     log('✅ GATT conectado', 'ok');
 
-    // Servicio I/O
     const ioSvc = await server.getPrimaryService(UUID.IO_SERVICE);
     outputChar  = await ioSvc.getCharacteristic(UUID.OUTPUT_CMD);
     inputChar   = await ioSvc.getCharacteristic(UUID.INPUT_CMD);
@@ -300,15 +300,12 @@ async function connectHub() {
     sensorChar.addEventListener('characteristicvaluechanged', onSensorValue);
     log('📡 Sensor notifications activadas', 'ok');
 
-    // Servicio Hub (detección de puertos + nombre)
     const hubSvc = await server.getPrimaryService(UUID.HUB_SERVICE);
-
     const ptChar = await hubSvc.getCharacteristic(UUID.PORT_TYPE);
     await ptChar.startNotifications();
     ptChar.addEventListener('characteristicvaluechanged', onPortType);
     log('🔌 Port type notifications activadas', 'ok');
 
-    // Guardamos la característica de nombre
     try {
       nameChar = await hubSvc.getCharacteristic(UUID.HUB_NAME);
       log('✏️ Característica de nombre disponible', 'ok');
@@ -334,7 +331,9 @@ async function connectHub() {
 function onDisconnect() {
   isConnected = false;
   outputChar = inputChar = sensorChar = nameChar = null;
-  detectedPorts.motor = detectedPorts.tilt = detectedPorts.motion = null;
+  detectedPorts.motors = [];
+  detectedPorts.tilt   = null;
+  detectedPorts.motion = null;
   for (const k of Object.keys(portCfg)) delete portCfg[k];
   updatePortDisplay();
   const btn = document.getElementById('connectBtn');
@@ -347,31 +346,20 @@ function onDisconnect() {
 // ── Renombrar Hub ────────────────────────────────────
 
 async function renameHub() {
-  if (!nameChar) {
-    alert('Conecta el hub primero.');
-    return;
-  }
+  if (!nameChar) { alert('Conecta el hub primero.'); return; }
   const nombre = prompt(
-    'Escribe el nuevo nombre del hub\n' +
-    '(máx. 14 caracteres, solo letras y números,\nsin tildes ni eñes):\n',
+    'Escribe el nuevo nombre del hub\n(máx. 14 caracteres, solo letras y números, sin tildes ni eñes):',
     bleDevice?.name || ''
   );
   if (!nombre) return;
-
-  // Solo ASCII, máximo 14 caracteres
   const clean = nombre.trim().replace(/[^\x00-\x7F]/g, '').substring(0, 14);
-  if (!clean) {
-    alert('Nombre no válido. Usa solo letras y números sin tildes ni eñes.');
-    return;
-  }
-
+  if (!clean) { alert('Nombre no válido. Usa solo letras y números sin tildes ni eñes.'); return; }
   const bytes = new Uint8Array(clean.length);
   for (let i = 0; i < clean.length; i++) bytes[i] = clean.charCodeAt(i);
-
   try {
     await nameChar.writeValueWithResponse(bytes);
     log(`✏️ Hub renombrado a "${clean}"`, 'ok');
-    log('🔄 Apaga y enciende el hub para que el nuevo nombre aparezca en el picker de Bluetooth', 'info');
+    log('🔄 Apaga y enciende el hub para que el nuevo nombre aparezca en el picker', 'info');
     setStatus('Renombrado: ' + clean, 'ok');
   } catch (e) {
     log('❌ Error al renombrar: ' + e.message, 'err');
@@ -387,9 +375,10 @@ async function onPortType(e) {
   const added = d[1] === 1;
 
   if (!added) {
-    for (const key of Object.keys(detectedPorts)) {
-      if (detectedPorts[key] === ch) detectedPorts[key] = null;
-    }
+    // Eliminar de la lista de motores si estaba
+    detectedPorts.motors = detectedPorts.motors.filter(p => p !== ch);
+    if (detectedPorts.tilt   === ch) detectedPorts.tilt   = null;
+    if (detectedPorts.motion === ch) detectedPorts.motion = null;
     portCfg[ch] = null;
     updatePortDisplay();
     log(`🔌 Puerto ${ch}: desconectado`, 'info');
@@ -400,19 +389,26 @@ async function onPortType(e) {
   const typeId = d[3];
 
   if (typeId === 0x01) {
-    detectedPorts.motor = ch;
+    // Motor: añadir al array si no está ya
+    if (!detectedPorts.motors.includes(ch)) {
+      detectedPorts.motors.push(ch);
+    }
     portCfg[ch] = 'motor';
-    log(`🔌 Puerto ${ch}: ⚙️ Motor detectado`, 'ok');
+    const idx = detectedPorts.motors.indexOf(ch) + 1;
+    log(`🔌 Puerto ${ch}: ⚙️ Motor ${idx} detectado`, 'ok');
+
   } else if (typeId === 0x22) {
     detectedPorts.tilt = ch;
     portCfg[ch] = 'tilt';
     log(`🔌 Puerto ${ch}: 📐 Sensor inclinación detectado`, 'ok');
     await configureSensor(ch, typeId);
+
   } else if (typeId === 0x23) {
     detectedPorts.motion = ch;
     portCfg[ch] = 'motion';
     log(`🔌 Puerto ${ch}: 📏 Sensor movimiento detectado`, 'ok');
     await configureSensor(ch, typeId);
+
   } else {
     log(`🔌 Puerto ${ch}: dispositivo tipo 0x${typeId.toString(16)}`, 'info');
   }
@@ -421,10 +417,16 @@ async function onPortType(e) {
 }
 
 function updatePortDisplay() {
-  const labels = { motor: '⚙️ Motor', tilt: '📐 Inclinación', motion: '📏 Movimiento' };
   for (const p of [1, 2]) {
     const el = document.getElementById(`port${p}Label`);
-    if (el) el.textContent = labels[portCfg[p]] || '— vacío';
+    if (!el) continue;
+    const type = portCfg[p];
+    if (type === 'motor') {
+      const idx = detectedPorts.motors.indexOf(p) + 1;
+      el.textContent = `⚙️ Motor ${idx}`;
+    } else if (type === 'tilt')   { el.textContent = '📐 Inclinación'; }
+    else if (type === 'motion')   { el.textContent = '📏 Movimiento'; }
+    else                          { el.textContent = '— vacío'; }
   }
 }
 
@@ -444,13 +446,12 @@ async function configureSensor(ch, deviceType) {
 // ── Sensores ─────────────────────────────────────────
 
 function onSensorValue(e) {
-  const d  = new Uint8Array(e.target.value.buffer);
+  const d   = new Uint8Array(e.target.value.buffer);
   if (d.length < 6) return;
-  const ch = d[1];
-  const dv = new DataView(e.target.value.buffer);
+  const ch  = d[1];
+  const dv  = new DataView(e.target.value.buffer);
   const val = dv.getFloat32(2, true);
   const type = portCfg[ch];
-
   if (type === 'motion') {
     sensorData.motion = Math.round(val * 10) / 10;
     document.getElementById('motionVal').textContent = sensorData.motion;
@@ -463,23 +464,46 @@ function onSensorValue(e) {
 
 // ── Comandos motor ───────────────────────────────────
 
-async function motorOn(direction, speed) {
-  if (!outputChar)                  { log('⚠️ Hub no conectado', 'err'); return; }
-  if (detectedPorts.motor === null) { log('⚠️ Motor no detectado. ¿Está conectado al hub?', 'err'); return; }
-  speed = Math.max(1, Math.min(5, Math.round(speed)));
-  const speedByte = direction === 'cw' ? SPD_CW[speed] : SPD_CCW[speed];
-  await outputChar.writeValueWithResponse(
-    new Uint8Array([detectedPorts.motor, 0x01, 0x01, speedByte])
-  );
-  log(`⚙️ Motor ${direction === 'cw' ? '↻' : '↺'} vel.${speed}`, 'cmd');
+// Resuelve qué canal BLE usar según la selección del bloque:
+// 'auto' → primer motor detectado
+// '1'    → motors[0] (Motor 1)
+// '2'    → motors[1] (Motor 2)
+function resolveMotorPort(sel) {
+  if (sel === 'auto') return detectedPorts.motors[0] ?? null;
+  const idx = parseInt(sel) - 1;
+  return detectedPorts.motors[idx] ?? null;
 }
 
-async function motorOff() {
-  if (!outputChar || detectedPorts.motor === null) return;
-  await outputChar.writeValueWithResponse(
-    new Uint8Array([detectedPorts.motor, 0x01, 0x01, 0x7f])
-  );
-  log('⏹ Motor parado', 'cmd');
+async function motorOn(sel, direction, speed) {
+  if (!outputChar) { log('⚠️ Hub no conectado', 'err'); return; }
+  const port = resolveMotorPort(sel);
+  if (port === null) {
+    const label = sel === 'auto' ? 'ningún motor' : `Motor ${sel}`;
+    log(`⚠️ ${label} no detectado. ¿Está conectado al hub?`, 'err');
+    return;
+  }
+  speed = Math.max(1, Math.min(5, Math.round(speed)));
+  const speedByte = direction === 'cw' ? SPD_CW[speed] : SPD_CCW[speed];
+  await outputChar.writeValueWithResponse(new Uint8Array([port, 0x01, 0x01, speedByte]));
+  const label = sel === 'auto' ? 'Auto' : `Motor ${sel}`;
+  log(`⚙️ [${label}] ${direction === 'cw' ? '↻' : '↺'} vel.${speed}`, 'cmd');
+}
+
+async function motorOff(sel) {
+  if (!outputChar) return;
+  // Si sel es undefined (llamada desde stopProgram), apagar todos
+  if (sel === undefined) {
+    for (const port of detectedPorts.motors) {
+      await outputChar.writeValueWithResponse(new Uint8Array([port, 0x01, 0x01, 0x7f]));
+    }
+    log('⏹ Todos los motores parados', 'cmd');
+    return;
+  }
+  const port = resolveMotorPort(sel);
+  if (port === null) return;
+  await outputChar.writeValueWithResponse(new Uint8Array([port, 0x01, 0x01, 0x7f]));
+  const label = sel === 'auto' ? 'Auto' : `Motor ${sel}`;
+  log(`⏹ [${label}] parado`, 'cmd');
 }
 
 async function setLed(colorName) {
@@ -507,6 +531,14 @@ async function waitUntil(condFn, timeoutMs = 60000) {
 
 const JS = Blockly.JavaScript;
 
+// Dropdown compartido para selección de motor
+const MOTOR_OPTIONS = [
+  ['🔀 Auto',   'auto'],
+  ['⚙️ Motor 1', '1'],
+  ['⚙️ Motor 2', '2'],
+];
+
+// ── 🚩 Bandera verde ──────────────────────────────────
 Blockly.Blocks['wedo_when_flag'] = {
   init() {
     this.appendDummyInput().appendField('▶  Al pulsar PLAY');
@@ -517,10 +549,12 @@ Blockly.Blocks['wedo_when_flag'] = {
 };
 JS['wedo_when_flag'] = () => '';
 
+// ── ⚙️ Encender motor ────────────────────────────────
 Blockly.Blocks['wedo_motor_on'] = {
   init() {
     this.appendDummyInput()
-      .appendField('⚙️ encender motor')
+      .appendField('⚙️ encender')
+      .appendField(new Blockly.FieldDropdown(MOTOR_OPTIONS), 'MOTOR')
       .appendField(new Blockly.FieldDropdown([
         ['↻ horario',     'cw'],
         ['↺ antihorario', 'ccw']
@@ -531,30 +565,44 @@ Blockly.Blocks['wedo_motor_on'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#4C97FF');
-    this.setTooltip('Enciende el motor y lo deja girando hasta usar "apagar motor"');
+    this.setTooltip(
+      'Enciende el motor seleccionado y lo deja girando.\n' +
+      'Auto: usa el primer motor detectado.\n' +
+      'Motor 1 / 2: elige un motor específico.'
+    );
   }
 };
 JS['wedo_motor_on'] = b => {
+  const motor = b.getFieldValue('MOTOR');
   const dir   = b.getFieldValue('DIR');
   const speed = JS.valueToCode(b, 'SPEED', JS.ORDER_ATOMIC) || '3';
-  return `await motorOn('${dir}', ${speed});\n`;
+  return `await motorOn('${motor}', '${dir}', ${speed});\n`;
 };
 
+// ── ⏹ Apagar motor ───────────────────────────────────
 Blockly.Blocks['wedo_motor_off'] = {
   init() {
-    this.appendDummyInput().appendField('⏹ apagar motor');
+    this.appendDummyInput()
+      .appendField('⏹ apagar')
+      .appendField(new Blockly.FieldDropdown(MOTOR_OPTIONS), 'MOTOR');
+    this.setInputsInline(true);
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#4C97FF');
-    this.setTooltip('Para el motor completamente');
+    this.setTooltip('Para el motor seleccionado.');
   }
 };
-JS['wedo_motor_off'] = () => `await motorOff();\n`;
+JS['wedo_motor_off'] = b => {
+  const motor = b.getFieldValue('MOTOR');
+  return `await motorOff('${motor}');\n`;
+};
 
+// ── ⚙️ Mover durante X segundos ──────────────────────
 Blockly.Blocks['wedo_motor_time'] = {
   init() {
     this.appendDummyInput()
-      .appendField('⚙️ mover motor')
+      .appendField('⚙️ mover')
+      .appendField(new Blockly.FieldDropdown(MOTOR_OPTIONS), 'MOTOR')
       .appendField(new Blockly.FieldDropdown([
         ['↻ horario',     'cw'],
         ['↺ antihorario', 'ccw']
@@ -566,26 +614,28 @@ Blockly.Blocks['wedo_motor_time'] = {
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
     this.setColour('#4C97FF');
-    this.setTooltip('Mueve el motor el tiempo indicado y lo para automáticamente');
+    this.setTooltip('Mueve el motor el tiempo indicado y lo para automáticamente.');
   }
 };
 JS['wedo_motor_time'] = b => {
+  const motor = b.getFieldValue('MOTOR');
   const dir   = b.getFieldValue('DIR');
   const speed = JS.valueToCode(b, 'SPEED', JS.ORDER_ATOMIC) || '3';
   const time  = JS.valueToCode(b, 'TIME',  JS.ORDER_ATOMIC) || '1';
-  return `await motorOn('${dir}', ${speed});\nawait sleep(${time}*1000);\nawait motorOff();\n`;
+  return `await motorOn('${motor}', '${dir}', ${speed});\nawait sleep(${time}*1000);\nawait motorOff('${motor}');\n`;
 };
 
+// ── 💡 LED ────────────────────────────────────────────
 Blockly.Blocks['wedo_led'] = {
   init() {
     this.appendDummyInput()
       .appendField('💡 LED de color')
       .appendField(new Blockly.FieldDropdown([
-        ['🔵 azul','azul'],         ['🟢 verde','verde'],
-        ['🔴 rojo','rojo'],         ['🟡 amarillo','amarillo'],
-        ['🟠 naranja','naranja'],   ['🟣 violeta','violeta'],
-        ['🩷 rosa','rosa'],         ['🩵 cian','cian'],
-        ['⚪ blanco','blanco'],     ['⚫ apagado','apagado'],
+        ['🔵 azul','azul'],       ['🟢 verde','verde'],
+        ['🔴 rojo','rojo'],       ['🟡 amarillo','amarillo'],
+        ['🟠 naranja','naranja'], ['🟣 violeta','violeta'],
+        ['🩷 rosa','rosa'],       ['🩵 cian','cian'],
+        ['⚪ blanco','blanco'],   ['⚫ apagado','apagado'],
       ]), 'COLOR');
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
@@ -595,6 +645,7 @@ Blockly.Blocks['wedo_led'] = {
 };
 JS['wedo_led'] = b => `await setLed('${b.getFieldValue('COLOR')}');\n`;
 
+// ── 📏 Sensor movimiento ──────────────────────────────
 Blockly.Blocks['wedo_sensor_motion'] = {
   init() {
     this.appendDummyInput().appendField('📏 distancia');
@@ -605,6 +656,7 @@ Blockly.Blocks['wedo_sensor_motion'] = {
 };
 JS['wedo_sensor_motion'] = () => ['sensorData.motion', JS.ORDER_MEMBER];
 
+// ── 📐 Inclinación (valor) ────────────────────────────
 Blockly.Blocks['wedo_sensor_tilt_val'] = {
   init() {
     this.appendDummyInput().appendField('📐 valor inclinación');
@@ -615,6 +667,7 @@ Blockly.Blocks['wedo_sensor_tilt_val'] = {
 };
 JS['wedo_sensor_tilt_val'] = () => ['sensorData.tilt', JS.ORDER_MEMBER];
 
+// ── 📐 Inclinación (booleano) ─────────────────────────
 Blockly.Blocks['wedo_sensor_tilt_bool'] = {
   init() {
     this.appendDummyInput()
@@ -639,6 +692,7 @@ JS['wedo_sensor_tilt_bool'] = b => {
   return [expr, JS.ORDER_EQUALITY];
 };
 
+// ── ⏱ Esperar N segundos ─────────────────────────────
 Blockly.Blocks['wedo_wait'] = {
   init() {
     this.appendValueInput('TIME').setCheck('Number').appendField('⏱ esperar');
@@ -655,6 +709,7 @@ JS['wedo_wait'] = b => {
   return `await sleep(${t}*1000);\n`;
 };
 
+// ── 🔢 Repetir N veces ────────────────────────────────
 Blockly.Blocks['wedo_repeat'] = {
   init() {
     this.appendValueInput('TIMES').setCheck('Number').appendField('🔢 repetir');
@@ -673,6 +728,7 @@ JS['wedo_repeat'] = b => {
   return `for (let _i=0; _i<${n} && isRunning; _i++) {\n${body}}\n`;
 };
 
+// ── 🔁 Por siempre ────────────────────────────────────
 Blockly.Blocks['wedo_forever'] = {
   init() {
     this.appendDummyInput().appendField('🔁 por siempre');
@@ -687,6 +743,7 @@ JS['wedo_forever'] = b => {
   return `while (isRunning) {\n${body}await sleep(20);\n}\n`;
 };
 
+// ── ⏳ Esperar hasta que ───────────────────────────────
 Blockly.Blocks['wedo_wait_until'] = {
   init() {
     this.appendValueInput('COND').setCheck('Boolean').appendField('⏳ esperar hasta que');
@@ -760,7 +817,7 @@ function stopProgram() {
   document.getElementById('playBtn').textContent = '▶';
   setStatus('Listo', 'ok');
   log('⏹ Parado por el usuario', 'info');
-  motorOff().catch(() => {});
+  motorOff().catch(() => {}); // sin argumento = apaga todos
 }
 
 // ══════════════════════════════════════════════════════
