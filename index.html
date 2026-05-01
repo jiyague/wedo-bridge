@@ -12,14 +12,12 @@
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: 'Segoe UI', Tahoma, sans-serif;
       display: flex; flex-direction: column;
       height: 100vh; overflow: hidden;
       background: #1a1a2e; color: white;
     }
-
     #topbar {
       background: linear-gradient(135deg, #16213e, #0f3460);
       padding: 8px 14px;
@@ -32,7 +30,6 @@
       font-size: 11px; color: #6a8ab8; white-space: nowrap;
       align-self: flex-end; padding-bottom: 2px; margin-left: -4px;
     }
-
     .btn {
       padding: 7px 15px; border: none; border-radius: 20px;
       font-size: 14px; font-weight: bold; cursor: pointer;
@@ -41,11 +38,9 @@
     .btn:hover:not(:disabled) { filter: brightness(1.15); }
     .btn:active:not(:disabled) { transform: scale(0.95); }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
     #connectBtn { background: #28a745; color: white; font-size: 15px; padding: 9px 20px; }
     #connectBtn.connected { background: #17a2b8; }
-    #renameBtn  { background: #5a4a8a; color: white; font-size: 13px; padding: 7px 13px; }
-
+    #renameBtn { background: #5a4a8a; color: white; font-size: 13px; padding: 7px 13px; }
     .round-btn {
       width: 46px; height: 46px; border-radius: 50% !important;
       font-size: 20px; display: flex; align-items: center; justify-content: center;
@@ -54,9 +49,7 @@
     #playBtn { background: #4caf50; color: white; }
     #playBtn.running { background: #ff9800; }
     #stopBtn { background: #e53935; color: white; }
-
     .divider { width: 1px; height: 38px; background: #3a3a5a; flex-shrink: 0; }
-
     .port-status {
       display: flex; flex-direction: column; gap: 3px;
       background: rgba(255,255,255,0.07);
@@ -64,7 +57,6 @@
     }
     .port-status .port-row { display: flex; align-items: center; gap: 5px; color: #aaa; }
     .port-status .port-val { font-weight: bold; color: #7ecfff; }
-
     .sensor-pill {
       background: rgba(255,255,255,0.07);
       padding: 4px 12px; border-radius: 10px;
@@ -74,7 +66,6 @@
       display: block; font-size: 17px; font-weight: bold;
       color: #ffd700; line-height: 1.3;
     }
-
     #statusBar {
       font-size: 12px; color: #888;
       background: rgba(255,255,255,0.05);
@@ -86,32 +77,24 @@
     #statusBar.ok   { color: #4caf50; }
     #statusBar.err  { color: #e53935; }
     #statusBar.warn { color: #ff9800; }
-
     #main { flex: 1; display: flex; overflow: hidden; }
     #blocklyDiv { flex: 1; height: 100%; }
-
     #sideContainer { display: flex; flex-direction: row; flex-shrink: 0; }
-
     #logToggleBtn {
-      width: 20px;
-      background: #2a2a4a; border: none;
-      border-left: 2px solid #3a3a5a;
-      cursor: pointer; color: #8ab4d4; font-size: 12px;
+      width: 20px; background: #2a2a4a; border: none;
+      border-left: 2px solid #3a3a5a; cursor: pointer;
+      color: #8ab4d4; font-size: 12px;
       display: flex; align-items: center; justify-content: center;
       transition: background 0.15s; flex-shrink: 0; padding: 0;
     }
     #logToggleBtn:hover { background: #3a3a6a; color: white; }
-
     #logPanel {
-      width: 210px;
-      background: #0d0d1a;
+      width: 210px; background: #0d0d1a;
       border-left: 2px solid #2a2a4a;
       display: flex; flex-direction: column;
-      overflow: hidden;
-      transition: width 0.25s ease;
+      overflow: hidden; transition: width 0.25s ease;
     }
     #logPanel.hidden { width: 0; border-left: none; }
-
     #logHeader {
       padding: 7px 10px; background: #12122a;
       border-bottom: 1px solid #2a2a4a;
@@ -187,10 +170,13 @@
 </div>
 
 <xml id="toolbox" style="display:none">
+
   <category name="🚩 Eventos" colour="#E6821E">
     <block type="wedo_when_flag"></block>
   </category>
+
   <sep></sep>
+
   <category name="⚙️ Motor" colour="#4C97FF">
     <block type="wedo_motor_on">
       <value name="SPEED"><block type="math_number"><field name="NUM">3</field></block></value>
@@ -201,15 +187,31 @@
       <value name="TIME"><block type="math_number"><field name="NUM">2</field></block></value>
     </block>
   </category>
+
+  <!-- NUEVA categoría Movimiento -->
+  <category name="🚗 Movimiento" colour="#FF6680">
+    <block type="wedo_move_time">
+      <value name="SPEED"><block type="math_number"><field name="NUM">3</field></block></value>
+      <value name="TIME"><block type="math_number"><field name="NUM">2</field></block></value>
+    </block>
+    <block type="wedo_move_start">
+      <value name="SPEED"><block type="math_number"><field name="NUM">3</field></block></value>
+    </block>
+    <block type="wedo_move_stop"></block>
+  </category>
+
   <category name="💡 LED" colour="#9966FF">
     <block type="wedo_led"></block>
   </category>
+
   <category name="📡 Sensores" colour="#5CB1D6">
     <block type="wedo_sensor_motion"></block>
     <block type="wedo_sensor_tilt_val"></block>
     <block type="wedo_sensor_tilt_bool"></block>
   </category>
+
   <sep></sep>
+
   <category name="🔁 Control" colour="#FFAB19">
     <block type="wedo_wait">
       <value name="TIME"><block type="math_number"><field name="NUM">1</field></block></value>
@@ -224,6 +226,7 @@
     <block type="controls_if"></block>
     <block type="controls_if"><mutation else="1"></mutation></block>
   </category>
+
   <category name="🔢 Operadores" colour="#59C059">
     <block type="logic_compare"><field name="OP">GT</field></block>
     <block type="logic_compare"><field name="OP">LT</field></block>
@@ -237,6 +240,7 @@
       <value name="TO"><block type="math_number"><field name="NUM">10</field></block></value>
     </block>
   </category>
+
 </xml>
 
 <script>
@@ -270,9 +274,7 @@ let sensorChar  = null;
 let nameChar    = null;
 let isConnected = false;
 
-// detectedPorts.motors es ahora un array ordenado por orden de detección:
-// motors[0] = primer motor detectado (Motor 1)
-// motors[1] = segundo motor detectado (Motor 2)
+// motors[0] = Motor 1 (rueda izquierda), motors[1] = Motor 2 (rueda derecha)
 const detectedPorts = { motors: [], tilt: null, motion: null };
 const portCfg       = {};
 const sensorData    = { motion: 0, tilt: 0 };
@@ -286,7 +288,6 @@ async function connectHub() {
       filters: [{ services: [UUID.HUB_SERVICE] }],
       optionalServices: [UUID.IO_SERVICE]
     });
-
     setStatus('Conectando...', '');
     bleDevice = dev;
     const server = await dev.gatt.connect();
@@ -315,7 +316,6 @@ async function connectHub() {
 
     log('⏳ Detectando dispositivos conectados...', 'info');
     isConnected = true;
-
     const btn = document.getElementById('connectBtn');
     btn.textContent = '✅ ' + (dev.name || 'Hub conectado');
     btn.classList.add('connected');
@@ -353,7 +353,7 @@ async function renameHub() {
   );
   if (!nombre) return;
   const clean = nombre.trim().replace(/[^\x00-\x7F]/g, '').substring(0, 14);
-  if (!clean) { alert('Nombre no válido. Usa solo letras y números sin tildes ni eñes.'); return; }
+  if (!clean) { alert('Nombre no válido.'); return; }
   const bytes = new Uint8Array(clean.length);
   for (let i = 0; i < clean.length; i++) bytes[i] = clean.charCodeAt(i);
   try {
@@ -375,7 +375,6 @@ async function onPortType(e) {
   const added = d[1] === 1;
 
   if (!added) {
-    // Eliminar de la lista de motores si estaba
     detectedPorts.motors = detectedPorts.motors.filter(p => p !== ch);
     if (detectedPorts.tilt   === ch) detectedPorts.tilt   = null;
     if (detectedPorts.motion === ch) detectedPorts.motion = null;
@@ -389,30 +388,23 @@ async function onPortType(e) {
   const typeId = d[3];
 
   if (typeId === 0x01) {
-    // Motor: añadir al array si no está ya
-    if (!detectedPorts.motors.includes(ch)) {
-      detectedPorts.motors.push(ch);
-    }
+    if (!detectedPorts.motors.includes(ch)) detectedPorts.motors.push(ch);
     portCfg[ch] = 'motor';
     const idx = detectedPorts.motors.indexOf(ch) + 1;
     log(`🔌 Puerto ${ch}: ⚙️ Motor ${idx} detectado`, 'ok');
-
   } else if (typeId === 0x22) {
     detectedPorts.tilt = ch;
     portCfg[ch] = 'tilt';
     log(`🔌 Puerto ${ch}: 📐 Sensor inclinación detectado`, 'ok');
     await configureSensor(ch, typeId);
-
   } else if (typeId === 0x23) {
     detectedPorts.motion = ch;
     portCfg[ch] = 'motion';
     log(`🔌 Puerto ${ch}: 📏 Sensor movimiento detectado`, 'ok');
     await configureSensor(ch, typeId);
-
   } else {
-    log(`🔌 Puerto ${ch}: dispositivo tipo 0x${typeId.toString(16)}`, 'info');
+    log(`🔌 Puerto ${ch}: tipo 0x${typeId.toString(16)}`, 'info');
   }
-
   updatePortDisplay();
 }
 
@@ -462,24 +454,18 @@ function onSensorValue(e) {
   }
 }
 
-// ── Comandos motor ───────────────────────────────────
+// ── Comandos motor individual ─────────────────────────
 
-// Resuelve qué canal BLE usar según la selección del bloque:
-// 'auto' → primer motor detectado
-// '1'    → motors[0] (Motor 1)
-// '2'    → motors[1] (Motor 2)
 function resolveMotorPort(sel) {
   if (sel === 'auto') return detectedPorts.motors[0] ?? null;
-  const idx = parseInt(sel) - 1;
-  return detectedPorts.motors[idx] ?? null;
+  return detectedPorts.motors[parseInt(sel) - 1] ?? null;
 }
 
 async function motorOn(sel, direction, speed) {
   if (!outputChar) { log('⚠️ Hub no conectado', 'err'); return; }
   const port = resolveMotorPort(sel);
   if (port === null) {
-    const label = sel === 'auto' ? 'ningún motor' : `Motor ${sel}`;
-    log(`⚠️ ${label} no detectado. ¿Está conectado al hub?`, 'err');
+    log(`⚠️ ${sel === 'auto' ? 'Ningún motor' : 'Motor ' + sel} no detectado`, 'err');
     return;
   }
   speed = Math.max(1, Math.min(5, Math.round(speed)));
@@ -491,7 +477,6 @@ async function motorOn(sel, direction, speed) {
 
 async function motorOff(sel) {
   if (!outputChar) return;
-  // Si sel es undefined (llamada desde stopProgram), apagar todos
   if (sel === undefined) {
     for (const port of detectedPorts.motors) {
       await outputChar.writeValueWithResponse(new Uint8Array([port, 0x01, 0x01, 0x7f]));
@@ -502,8 +487,43 @@ async function motorOff(sel) {
   const port = resolveMotorPort(sel);
   if (port === null) return;
   await outputChar.writeValueWithResponse(new Uint8Array([port, 0x01, 0x01, 0x7f]));
-  const label = sel === 'auto' ? 'Auto' : `Motor ${sel}`;
-  log(`⏹ [${label}] parado`, 'cmd');
+  log(`⏹ [${sel === 'auto' ? 'Auto' : 'Motor ' + sel}] parado`, 'cmd');
+}
+
+// ── Comandos de movimiento (dos ruedas simétricas) ───
+//
+// Convención:
+//   Motor 1 (rueda izquierda, motors[0]): ↻ CW  = adelante
+//   Motor 2 (rueda derecha,  motors[1]): ↺ CCW = adelante
+// Si el robot va al revés, intercambia ↑ y ↓ en los bloques.
+
+async function robotMove(dir, speed) {
+  if (!outputChar) { log('⚠️ Hub no conectado', 'err'); return; }
+  if (detectedPorts.motors.length < 2) {
+    log('⚠️ Movimiento necesita 2 motores detectados', 'err');
+    return;
+  }
+  speed = Math.max(1, Math.min(5, Math.round(speed)));
+
+  const portL = detectedPorts.motors[0]; // rueda izquierda
+  const portR = detectedPorts.motors[1]; // rueda derecha
+
+  // Adelante: izquierda CW, derecha CCW
+  // Atrás:    izquierda CCW, derecha CW
+  const byteL = dir === 'fwd' ? SPD_CW[speed]  : SPD_CCW[speed];
+  const byteR = dir === 'fwd' ? SPD_CCW[speed] : SPD_CW[speed];
+
+  await outputChar.writeValueWithResponse(new Uint8Array([portL, 0x01, 0x01, byteL]));
+  await outputChar.writeValueWithResponse(new Uint8Array([portR, 0x01, 0x01, byteR]));
+  log(`🚗 ${dir === 'fwd' ? '▲ Adelante' : '▼ Atrás'} vel.${speed}`, 'cmd');
+}
+
+async function robotStop() {
+  if (!outputChar) return;
+  for (const port of detectedPorts.motors) {
+    await outputChar.writeValueWithResponse(new Uint8Array([port, 0x01, 0x01, 0x7f]));
+  }
+  log('⏹ Movimiento parado', 'cmd');
 }
 
 async function setLed(colorName) {
@@ -531,11 +551,20 @@ async function waitUntil(condFn, timeoutMs = 60000) {
 
 const JS = Blockly.JavaScript;
 
-// Dropdown compartido para selección de motor
 const MOTOR_OPTIONS = [
-  ['🔀 Auto',   'auto'],
+  ['🔀 Auto',    'auto'],
   ['⚙️ Motor 1', '1'],
   ['⚙️ Motor 2', '2'],
+];
+
+const DIR_OPTIONS = [
+  ['↻ horario',     'cw'],
+  ['↺ antihorario', 'ccw'],
+];
+
+const MOVE_DIR_OPTIONS = [
+  ['▲ adelante', 'fwd'],
+  ['▼ atrás',    'bwd'],
 ];
 
 // ── 🚩 Bandera verde ──────────────────────────────────
@@ -555,21 +584,13 @@ Blockly.Blocks['wedo_motor_on'] = {
     this.appendDummyInput()
       .appendField('⚙️ encender')
       .appendField(new Blockly.FieldDropdown(MOTOR_OPTIONS), 'MOTOR')
-      .appendField(new Blockly.FieldDropdown([
-        ['↻ horario',     'cw'],
-        ['↺ antihorario', 'ccw']
-      ]), 'DIR');
+      .appendField(new Blockly.FieldDropdown(DIR_OPTIONS), 'DIR');
     this.appendValueInput('SPEED').setCheck('Number').appendField('velocidad');
     this.appendDummyInput().appendField('(1–5)');
     this.setInputsInline(true);
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
+    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
     this.setColour('#4C97FF');
-    this.setTooltip(
-      'Enciende el motor seleccionado y lo deja girando.\n' +
-      'Auto: usa el primer motor detectado.\n' +
-      'Motor 1 / 2: elige un motor específico.'
-    );
+    this.setTooltip('Enciende el motor y lo deja girando hasta usar "apagar motor".');
   }
 };
 JS['wedo_motor_on'] = b => {
@@ -586,33 +607,25 @@ Blockly.Blocks['wedo_motor_off'] = {
       .appendField('⏹ apagar')
       .appendField(new Blockly.FieldDropdown(MOTOR_OPTIONS), 'MOTOR');
     this.setInputsInline(true);
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
+    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
     this.setColour('#4C97FF');
     this.setTooltip('Para el motor seleccionado.');
   }
 };
-JS['wedo_motor_off'] = b => {
-  const motor = b.getFieldValue('MOTOR');
-  return `await motorOff('${motor}');\n`;
-};
+JS['wedo_motor_off'] = b => `await motorOff('${b.getFieldValue('MOTOR')}');\n`;
 
-// ── ⚙️ Mover durante X segundos ──────────────────────
+// ── ⚙️ Motor durante X segundos ──────────────────────
 Blockly.Blocks['wedo_motor_time'] = {
   init() {
     this.appendDummyInput()
       .appendField('⚙️ mover')
       .appendField(new Blockly.FieldDropdown(MOTOR_OPTIONS), 'MOTOR')
-      .appendField(new Blockly.FieldDropdown([
-        ['↻ horario',     'cw'],
-        ['↺ antihorario', 'ccw']
-      ]), 'DIR');
+      .appendField(new Blockly.FieldDropdown(DIR_OPTIONS), 'DIR');
     this.appendValueInput('SPEED').setCheck('Number').appendField('velocidad');
     this.appendValueInput('TIME').setCheck('Number').appendField('durante');
     this.appendDummyInput().appendField('segundos');
     this.setInputsInline(true);
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
+    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
     this.setColour('#4C97FF');
     this.setTooltip('Mueve el motor el tiempo indicado y lo para automáticamente.');
   }
@@ -625,7 +638,68 @@ JS['wedo_motor_time'] = b => {
   return `await motorOn('${motor}', '${dir}', ${speed});\nawait sleep(${time}*1000);\nawait motorOff('${motor}');\n`;
 };
 
-// ── 💡 LED ────────────────────────────────────────────
+// ── 🚗 Mover robot durante X segundos ────────────────
+Blockly.Blocks['wedo_move_time'] = {
+  init() {
+    this.appendDummyInput()
+      .appendField('🚗 mover')
+      .appendField(new Blockly.FieldDropdown(MOVE_DIR_OPTIONS), 'DIR');
+    this.appendValueInput('SPEED').setCheck('Number').appendField('velocidad');
+    this.appendValueInput('TIME').setCheck('Number').appendField('durante');
+    this.appendDummyInput().appendField('segundos');
+    this.setInputsInline(true);
+    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+    this.setColour('#FF6680');
+    this.setTooltip(
+      'Mueve el robot en línea recta usando los dos motores.\n' +
+      'Para automáticamente al terminar el tiempo.\n' +
+      'Necesita 2 motores conectados.'
+    );
+  }
+};
+JS['wedo_move_time'] = b => {
+  const dir   = b.getFieldValue('DIR');
+  const speed = JS.valueToCode(b, 'SPEED', JS.ORDER_ATOMIC) || '3';
+  const time  = JS.valueToCode(b, 'TIME',  JS.ORDER_ATOMIC) || '1';
+  return `await robotMove('${dir}', ${speed});\nawait sleep(${time}*1000);\nawait robotStop();\n`;
+};
+
+// ── 🚗 Mover robot continuo ───────────────────────────
+Blockly.Blocks['wedo_move_start'] = {
+  init() {
+    this.appendDummyInput()
+      .appendField('🚗 mover')
+      .appendField(new Blockly.FieldDropdown(MOVE_DIR_OPTIONS), 'DIR');
+    this.appendValueInput('SPEED').setCheck('Number').appendField('velocidad');
+    this.appendDummyInput().appendField('(1–5)');
+    this.setInputsInline(true);
+    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+    this.setColour('#FF6680');
+    this.setTooltip(
+      'Mueve el robot en línea recta y lo deja en marcha.\n' +
+      'Usa "⏹ parar movimiento" para detenerlo.\n' +
+      'Necesita 2 motores conectados.'
+    );
+  }
+};
+JS['wedo_move_start'] = b => {
+  const dir   = b.getFieldValue('DIR');
+  const speed = JS.valueToCode(b, 'SPEED', JS.ORDER_ATOMIC) || '3';
+  return `await robotMove('${dir}', ${speed});\n`;
+};
+
+// ── ⏹ Parar movimiento ───────────────────────────────
+Blockly.Blocks['wedo_move_stop'] = {
+  init() {
+    this.appendDummyInput().appendField('⏹ parar movimiento');
+    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
+    this.setColour('#FF6680');
+    this.setTooltip('Para los dos motores de rueda a la vez.');
+  }
+};
+JS['wedo_move_stop'] = () => `await robotStop();\n`;
+
+// ── 💡 LED ──────────────────────────��─────────────────
 Blockly.Blocks['wedo_led'] = {
   init() {
     this.appendDummyInput()
@@ -637,8 +711,7 @@ Blockly.Blocks['wedo_led'] = {
         ['🩷 rosa','rosa'],       ['🩵 cian','cian'],
         ['⚪ blanco','blanco'],   ['⚫ apagado','apagado'],
       ]), 'COLOR');
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
+    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
     this.setColour('#9966FF');
     this.setTooltip('Cambia el color de la luz del hub');
   }
@@ -649,8 +722,7 @@ JS['wedo_led'] = b => `await setLed('${b.getFieldValue('COLOR')}');\n`;
 Blockly.Blocks['wedo_sensor_motion'] = {
   init() {
     this.appendDummyInput().appendField('📏 distancia');
-    this.setOutput(true, 'Number');
-    this.setColour('#5CB1D6');
+    this.setOutput(true, 'Number'); this.setColour('#5CB1D6');
     this.setTooltip('Valor del sensor de movimiento');
   }
 };
@@ -660,8 +732,7 @@ JS['wedo_sensor_motion'] = () => ['sensorData.motion', JS.ORDER_MEMBER];
 Blockly.Blocks['wedo_sensor_tilt_val'] = {
   init() {
     this.appendDummyInput().appendField('📐 valor inclinación');
-    this.setOutput(true, 'Number');
-    this.setColour('#5CB1D6');
+    this.setOutput(true, 'Number'); this.setColour('#5CB1D6');
     this.setTooltip('0=plano, 1=atrás, 2=adelante, 3=derecha, 4=izquierda');
   }
 };
@@ -674,15 +745,12 @@ Blockly.Blocks['wedo_sensor_tilt_bool'] = {
       .appendField('📐 ¿inclinado')
       .appendField(new Blockly.FieldDropdown([
         ['en cualquier dirección', 'any'],
-        ['hacia adelante',  '2'],
-        ['hacia atrás',     '1'],
-        ['a la derecha',    '3'],
-        ['a la izquierda',  '4'],
-        ['plano',           '0'],
+        ['hacia adelante', '2'], ['hacia atrás',    '1'],
+        ['a la derecha',   '3'], ['a la izquierda', '4'],
+        ['plano',          '0'],
       ]), 'DIR')
       .appendField('?');
-    this.setOutput(true, 'Boolean');
-    this.setColour('#5CB1D6');
+    this.setOutput(true, 'Boolean'); this.setColour('#5CB1D6');
     this.setTooltip('Verdadero si el sensor tiene esa inclinación ahora mismo');
   }
 };
@@ -698,8 +766,7 @@ Blockly.Blocks['wedo_wait'] = {
     this.appendValueInput('TIME').setCheck('Number').appendField('⏱ esperar');
     this.appendDummyInput().appendField('segundos');
     this.setInputsInline(true);
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
+    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
     this.setColour('#FFAB19');
     this.setTooltip('Espera los segundos indicados antes de continuar');
   }
@@ -716,8 +783,7 @@ Blockly.Blocks['wedo_repeat'] = {
     this.appendDummyInput().appendField('veces');
     this.appendStatementInput('DO').setCheck(null).appendField('hacer');
     this.setInputsInline(true);
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
+    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
     this.setColour('#FFAB19');
     this.setTooltip('Repite los bloques el número de veces indicado');
   }
@@ -748,8 +814,7 @@ Blockly.Blocks['wedo_wait_until'] = {
   init() {
     this.appendValueInput('COND').setCheck('Boolean').appendField('⏳ esperar hasta que');
     this.setInputsInline(true);
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
+    this.setPreviousStatement(true, null); this.setNextStatement(true, null);
     this.setColour('#FFAB19');
     this.setTooltip('Espera hasta que la condición sea verdadera (máx. 60 seg)');
   }
@@ -817,7 +882,7 @@ function stopProgram() {
   document.getElementById('playBtn').textContent = '▶';
   setStatus('Listo', 'ok');
   log('⏹ Parado por el usuario', 'info');
-  motorOff().catch(() => {}); // sin argumento = apaga todos
+  motorOff().catch(() => {});  // apaga todos los motores
 }
 
 // ══════════════════════════════════════════════════════
